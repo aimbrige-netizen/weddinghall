@@ -239,6 +239,13 @@ var Store = (function () {
     emit('compare');
   }
 
+  /* compareClear를 되돌리기 위해 원래 배열을 통째로 복원한다 (id 유지) */
+  function compareRestore(list) {
+    compare = (list || []).slice(0, CONFIG.MAX_COMPARE);
+    persistCompare();
+    emit('compare');
+  }
+
   function compareGet(id) {
     for (var i = 0; i < compare.length; i++) if (compare[i].id === id) return compare[i];
     return null;
@@ -266,6 +273,7 @@ var Store = (function () {
     compareAdd: compareAdd,
     compareRemove: compareRemove,
     compareClear: compareClear,
+    compareRestore: compareRestore,
     compareGet: compareGet
   };
 })();

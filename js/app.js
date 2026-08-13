@@ -35,19 +35,37 @@
     dockActions:  $('#dockActions'),
     btnCompare:   $('#btnOpenCompare'),
     badge:        $('#compareBadge'),
-    toast:        $('#toast')
+    toast:        $('#toast'),
+    toastMsg:     $('#toastMsg'),
+    toastUndo:    $('#toastUndo')
   };
 
   var view = 'wizard';
   var toastTimer = null;
   var suppressHistory = false;
 
-  /* ── 토스트 ───────────────────────────────────────────────────────────── */
-  function toast(msg) {
-    el.toast.textContent = msg;
+  /* ── 토스트 ───────────────────────────────────────────────────────────────
+     opts.undo가 있으면 파괴적 액션(전부 비우기 등)을 되돌릴 수 있는 버튼을 띄운다.
+     시간이 넉넉해야 실수로 지운 걸 알아챌 수 있어 되돌리기가 있을 때는 더 오래 둔다. */
+  function toast(msg, opts) {
+    el.toastMsg.textContent = msg;
     el.toast.classList.add('is-on');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { el.toast.classList.remove('is-on'); }, 2400);
+
+    el.toastUndo.onclick = null;
+    if (opts && opts.undo) {
+      el.toastUndo.hidden = false;
+      el.toastUndo.onclick = function () {
+        clearTimeout(toastTimer);
+        el.toast.classList.remove('is-on');
+        opts.undo();
+      };
+    } else {
+      el.toastUndo.hidden = true;
+    }
+
+    var dur = (opts && opts.undo) ? 5000 : 3200;
+    toastTimer = setTimeout(function () { el.toast.classList.remove('is-on'); }, dur);
   }
 
   /* ── 장부(ledger) 마크업 ──────────────────────────────────────────────── */
@@ -617,9 +635,12 @@
     },
 
     removeCompare: function (btn) {
+      var prevList = Store.compareList().slice();
       Store.compareRemove(btn.getAttribute('data-id'));
       renderCompare();
-      toast('비교함에서 뺐습니다');
+      toast('비교함에서 뺐습니다', {
+        undo: function () { Store.compareRestore(prevList); renderCompare(); toast('되돌렸습니다'); }
+      });
     },
 
     editCompare: function (btn) {
@@ -635,9 +656,12 @@
 
     clearCompare: function () {
       if (!Store.compareCount()) return;
+      var prevList = Store.compareList().slice();
       Store.compareClear();
       renderCompare();
-      toast('비교함을 비웠습니다');
+      toast('비교함을 비웠습니다', {
+        undo: function () { Store.compareRestore(prevList); renderCompare(); toast('되돌렸습니다'); }
+      });
     },
 
     copyCompare: function () {
@@ -711,11 +735,24 @@
   });
 
   el.btnClearAll.addEventListener('click', function () {
+    var snapshot = {};
+    var s = Store.all();
+    for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) snapshot[k] = s[k];
+    var wasExample = Store.isExampleData();
+
     Store.clearAll();
     writeInputs();
     renderLive();
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
-    toast('입력값을 비웠습니다');
+
+    toast('입력값을 비웠습니다', {
+      undo: function () {
+        if (wasExample) Store.loadExample(); else Store.loadFrom(snapshot);
+        writeInputs();
+        renderLive();
+        toast('되돌렸습니다');
+      }
+    });
   });
 
   /* ── 배지 ─────────────────────────────────────────────────────────────── */
