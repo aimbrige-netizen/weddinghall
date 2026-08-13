@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0B0B0C">
+<title>Sding 웨딩홀 견적 검산기 — 그 견적서, 1인당 진짜 얼마인가요?</title>
+<meta name="description" content="식대 단가만 보면 저렴해 보이는 웨딩홀 견적서. 보증인원·대관료·꽃장식·주류·필수옵션·부가세까지 전부 넣고 청구인원 기준으로 다시 계산해 1인당 실질단가와 허수인원을 알려드립니다.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sding 웨딩홀 견적 검산기">
+<meta property="og:description" content="그 견적서, 1인당 진짜 얼마인가요? 청구인원 기준으로 다시 계산해 드립니다.">
+<meta property="og:image" content="assets/logo.svg">
+<meta property="og:locale" content="ko_KR">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<!--
+  THESIS: 견적서를 다시 발행한다. 계산기 UI(카드 나열·배지·차트)를 거부하고, 사용자가 손에 들고 있는
+    견적서와 같은 문법 — 원장 괘선, 표 정렬 숫자, 발행 헤더 — 으로 답한다.
+  OWN-WORLD: 본 화이트 캔버스(#F7F6F3)에 먹색 문서 헤더. 카드 대신 1px 괘선으로 구획. 숫자는 tabular 800,
+    trailing -0.035em. 오렌지는 진행·액션·현재 상태에만. 허수 구간 단 하나만 딥러스트(#B83200)로 완전히 잠긴다.
+  STORY: 식대만 싼 견적서를 의심하는 예비부부가 5단계로 숫자를 옮겨 적고, 청구인원 기준 총액·1인당 실질단가·
+    허수인원을 받아 홀 3곳을 나란히 비교한다.
+  FIRST VIEWPORT: 먹색 문서 헤더(로고 + 견적 검산기 + 비교함), 좌측 정렬 대형 헤드라인, 시작 버튼 없이 바로
+    Step 1 입력. 하단 고정 바에 실시간 총액·1인당과 다음 버튼.
+  FORM: 재발행된 견적서 (후보 1/7, 좌석도는 허수 구간에만 국한). seed: Node 미설치로 concept-seed.mjs 미실행, 수동 선정.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+-->
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="i-base" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5 12h13M13 6.5 18.5 12 13 17.5"/>
+  </symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19 12H6M11 17.5 5.5 12 11 6.5"/>
+  </symbol>
+  <symbol id="i-stack" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3.5 21 8l-9 4.5L3 8l9-4.5Z"/><path d="m3.5 12.5 8.5 4.2 8.5-4.2"/><path d="m3.5 16.8 8.5 4.2 8.5-4.2"/>
+  </symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2.5"/><path d="M15.5 5.5a2 2 0 0 0-2-2H6a2.5 2.5 0 0 0-2.5 2.5v7.5a2 2 0 0 0 2 2"/>
+  </symbol>
+  <symbol id="i-image" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m4.5 17 4.6-4.3a1.8 1.8 0 0 1 2.5 0l5 4.7"/>
+  </symbol>
+  <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 15.5V3.8M8.2 7.4 12 3.6l3.8 3.8"/><path d="M5 13.5v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>
+  </symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m6.5 6.5 11 11M17.5 6.5l-11 11"/>
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m5 12.5 4.5 4.5L19 7.5"/>
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 5.5v13M5.5 12h13"/>
+  </symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M19.5 5.5v5h-5"/><path d="M19 10.5A7.5 7.5 0 1 0 19.9 14"/>
+  </symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4.5 19.5h4l10-10a2.1 2.1 0 0 0-3-3l-10 10v3Z"/><path d="m14.5 7.5 2.5 2.5"/>
+  </symbol>
+</svg>
+
+<div class="shell" id="shell">
+
+  <div class="rail">
+
+    <header class="rail-top" id="railTop">
+      <a class="brand" href="./" aria-label="Sding 웨딩홀 견적 검산기 처음으로">
+        <svg class="brand-logo" viewBox="0 0 365 151" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sding">
+          <path d="M184.847 31.5962C191.8 31.5962 197.449 25.9181 197.449 18.7785C197.449 11.6389 191.8 5.96094 184.847 5.96094C177.893 5.96094 172.094 11.7862 172.094 18.7785C172.094 25.7709 177.893 31.5962 184.847 31.5962Z"/>
+          <path d="M195.138 41.9321H174.565V114.043H195.138V41.9321Z"/>
+          <path d="M226.709 80.532V114.032H206.136V78.0505C206.136 57.0734 218.45 39.8816 243.516 39.8816C268.583 39.8816 281.185 56.9262 281.185 78.0505V114.032H260.612V80.532C260.612 69.4599 255.252 59.9965 243.516 59.9965C231.78 59.9965 226.709 69.4704 226.709 80.532Z"/>
+          <path d="M141.775 6.4126V34.1403C139.518 33.5199 137.153 33.1624 134.725 33.1098C127.075 33.0047 119.854 35.7911 114.355 41.0906C109.626 45.6435 106.631 51.7316 105.86 58.1667C91.4604 59.5547 80.1736 71.5206 80.1736 86.0311C80.1736 101.467 92.9582 114.032 108.663 114.032H162.637V61.1109V6.4126H141.775ZM108.653 93.5282C104.448 93.5282 101.025 90.1635 101.025 86.0311C101.025 81.8988 104.448 78.534 108.653 78.534H126.519V61.4369C126.519 59.2708 127.386 57.2519 128.947 55.7378C130.413 54.3288 132.307 53.5823 134.307 53.6138C138.426 53.6979 141.775 57.0627 141.775 61.1109V93.5387H108.653V93.5282Z"/>
+          <path d="M39.5412 114.043C30.8434 114.043 22.1135 110.962 14.8814 105.116C5.10312 97.2192 0 83.7812 0 74.5912H20.8618C20.8618 78.2714 23.6327 85.6423 28.1367 89.2805C32.9189 93.1499 38.8672 94.4853 44.0345 92.866C48.7739 91.3835 52.3578 87.6297 53.1602 83.308C53.8663 79.5017 53.2565 74.1286 42.1623 66.3476L40.9855 65.5274C36.8131 62.6148 32.0844 59.3131 28.1795 54.7076C18.5403 43.3306 18.4119 25.5184 27.88 13.2791C34.2348 5.06697 43.6922 0.356316 54.5082 0.0198403C66.4155 -0.358695 78.1409 4.69895 85.8972 13.5104C93.5252 22.1747 97.0771 32.9419 97.0771 47.3788H76.2152C76.2152 38.0205 74.3323 31.7221 70.1171 26.9274C66.4797 22.795 60.7561 20.3346 55.1501 20.5133C52.0262 20.6079 47.6399 21.5858 44.4731 25.6971C40.8571 30.3762 40.7287 37.5053 44.195 41.5956C46.3668 44.1507 49.6084 46.4219 53.0532 48.8193L54.2729 49.671C69.7213 60.5118 76.2473 73.0666 73.669 86.9882C71.5079 98.6702 62.3501 108.649 50.3465 112.403C46.8268 113.507 43.1893 114.043 39.5519 114.043H39.5412Z"/>
+          <path d="M326.546 111.551C305.867 111.551 289.038 95.0111 289.038 74.6859C289.038 54.3607 305.867 37.8208 326.546 37.8208C347.226 37.8208 364.055 54.3607 364.055 74.6859C364.055 95.0111 347.226 111.551 326.546 111.551ZM326.546 58.3143C317.367 58.3143 309.889 65.6536 309.889 74.6859C309.889 83.7182 317.357 91.0575 326.546 91.0575C335.736 91.0575 343.204 83.7182 343.204 74.6859C343.204 65.6536 335.736 58.3143 326.546 58.3143Z"/>
+          <path d="M326.546 150.876C305.867 150.876 289.038 134.337 289.038 114.011H309.9C309.9 123.033 317.367 130.383 326.557 130.383C335.747 130.383 343.215 123.044 343.215 114.011V74.6858H364.076V114.011C364.076 134.337 347.248 150.876 326.568 150.876H326.546Z"/>
+        </svg>
+        <span class="brand-rule" aria-hidden="true"></span>
+        <span class="brand-sub">견적 검산기</span>
+      </a>
+
+      <button type="button" class="chip" id="btnOpenCompare" aria-label="비교함 열기">
+        <svg class="ic" aria-hidden="true"><use href="#i-stack"/></svg>
+        <span>비교함</span>
+        <span class="chip-count" id="compareBadge">0</span>
+      </button>
+    </header>
+
+    <div class="rail-hero" id="railHero">
+      <h1 class="hero-title">그 견적서,<br>1인당 <em>진짜 얼마</em>인가요?</h1>
+      <p class="hero-sub">식대 단가만 보면 저렴해 보입니다. 보증인원 · 대관료 · 꽃장식 · 주류 · 필수옵션 · 부가세까지 전부 넣고 청구인원 기준으로 다시 계산해 드립니다.</p>
+
+      <div class="rail-live" id="railLive">
+        <div class="rl-row">
+          <span class="rl-k">총 예상비용</span>
+          <span class="rl-v" data-live="total">0원</span>
+        </div>
+        <div class="rl-row">
+          <span class="rl-k">1인당 실질단가</span>
+          <span class="rl-v is-accent" data-live="per">0원</span>
+        </div>
+        <div class="rl-row">
+          <span class="rl-k">허수인원</span>
+          <span class="rl-v" data-live="phantom">0명</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="steps" id="steps" aria-label="입력 단계">
+      <ol class="steps-list">
+        <li><button type="button" class="pstep" data-goto="1"><span class="pnum">1</span><span class="plabel">하객</span></button></li>
+        <li><button type="button" class="pstep" data-goto="2"><span class="pnum">2</span><span class="plabel">식대</span></button></li>
+        <li><button type="button" class="pstep" data-goto="3"><span class="pnum">3</span><span class="plabel">대관·꽃</span></button></li>
+        <li><button type="button" class="pstep" data-goto="4"><span class="pnum">4</span><span class="plabel">옵션</span></button></li>
+        <li><button type="button" class="pstep" data-goto="5"><span class="pnum">5</span><span class="plabel">부가세</span></button></li>
+      </ol>
+      <div class="steps-track"><div class="steps-fill" id="stepsFill"></div></div>
+    </nav>
+  </div>
+
+  <div class="stage" id="stage">
+    <main id="main">
+
+      <!-- ══ 위저드 ═════════════════════════════════════════ -->
+      <section class="view" id="viewWizard">
+
+        <div class="notice" id="exampleNotice">
+          <p class="notice-text"><b>지금 채워진 숫자는 예시입니다.</b> 받아온 견적서 숫자로 덮어쓰세요.</p>
+          <button type="button" class="mini-btn" id="btnClearAll">전부 비우기</button>
+        </div>
+
+        <form id="wizardForm" autocomplete="off" novalidate>
+
+          <!-- ── Step 1 ── -->
+          <section class="step" data-step="1" hidden>
+            <header class="step-head">
+              <h2 class="step-title">하객 · 보증인원</h2>
+              <p class="step-desc">계약서의 <b>보증인원</b>과, 실제로 올 것 같은 <b>예상 참석인원</b>을 각각 넣으세요. 이 둘의 차이가 허수인원이 됩니다.</p>
+            </header>
+
+            <div class="field">
+              <span class="field-label">보증방식</span>
+              <div class="seg" role="group" aria-label="보증방식" data-toggle="guaranteeMode">
+                <button type="button" class="seg-btn" data-value="unified">통합보증</button>
+                <button type="button" class="seg-btn" data-value="separate">각보증</button>
+              </div>
+              <span class="field-help" data-help="guaranteeMode"></span>
+            </div>
+
+            <div data-when="guaranteeMode=unified">
+              <label class="field">
+                <span class="field-label">총 보증인원</span>
+                <span class="input-wrap">
+                  <input type="text" inputmode="numeric" data-field="unifiedGuarantee" data-type="number">
+                  <span class="unit">명</span>
+                </span>
+              </label>
+            </div>
+
+            <div data-when="guaranteeMode=separate">
+              <div class="grid-2">
+                <label class="field">
+                  <span class="field-label">신랑측 보증</span>
+                  <span class="input-wrap">
+                    <input type="text" inputmode="numeric" data-field="groomGuarantee" data-type="number">
+                    <span class="unit">명</span>
+                  </span>
+                </label>
+                <label class="field">
+                  <span class="field-label">신부측 보증</span>
+                  <span class="input-wrap">
+                    <input type="text" inputmode="numeric" data-field="brideGuarantee" data-type="number">
+                    <span class="unit">명</span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <label class="field">
+                <span class="field-label">신랑측 예상참석</span>
+                <span class="input-wrap">
+                  <input type="text" inputmode="numeric" data-field="groomExpected" data-type="number">
+                  <span class="unit">명</span>
+                </span>
+              </label>
+              <label class="field">
+                <span class="field-label">신부측 예상참석</span>
+                <span class="input-wrap">
+                  <input type="text" inputmode="numeric" data-field="brideExpected" data-type="number">
+                  <span class="unit">명</span>
+                </span>
+              </label>
+            </div>
+
+            <div class="ledger" data-live-box="step1"></div>
+          </section>
+
+          <!-- ── Step 2 ── -->
+          <section class="step" data-step="2" hidden>
+            <header class="step-head">
+              <h2 class="step-title">식대</h2>
+              <p class="step-desc">식대는 참석인원이 아니라 <b>청구인원</b>에 곱해집니다. 부가세 포함 여부를 견적서에서 꼭 확인하세요.</p>
+            </header>
+
+            <label class="field">
+              <span class="field-label">성인 1인 식대</span>
+              <span class="input-wrap">
+                <input type="text" inputmode="numeric" data-field="adultMealPrice" data-type="number">
+                <span class="unit">원</span>
+              </span>
+            </label>
+
+            <div class="field">
+              <span class="field-label">식대 부가세</span>
+              <div class="seg" role="group" aria-label="식대 부가세" data-toggle="mealVatMode">
+                <button type="button" class="seg-btn" data-value="included">포함</button>
+                <button type="button" class="seg-btn" data-value="excluded">별도 10%</button>
+              </div>
+              <span class="field-help" data-help="mealVatMode"></span>
+            </div>
+
+            <details class="disclosure">
+              <summary><span>아동 식대</span><span class="opt">선택</span><span class="disc-mark" aria-hidden="true"></span></summary>
+              <div class="disclosure-body">
+                <div class="grid-2">
+                  <label class="field">
+                    <span class="field-label">아동 1인 식대</span>
+                    <span class="input-wrap"><input type="text" inputmode="numeric" data-field="childMealPrice" data-type="number"><span class="unit">원</span></span>
+                  </label>
+                  <label class="field">
+                    <span class="field-label">아동 예상인원</span>
+                    <span class="input-wrap"><input type="text" inputmode="numeric" data-field="childCount" data-type="number"><span class="unit">명</span></span>
+                  </label>
+                </div>
+                <p class="field-help">아동 식대는 청구인원과 별개로 <b>추가 합산</b>됩니다. 계약서상 아동이 보증인원에 포함된다면 여기는 비우고 성인 인원에 넣으세요.</p>
+              </div>
+            </details>
+
+            <div class="ledger" data-live-box="step2"></div>
+          </section>
+
+          <!-- ── Step 3 ── -->
+          <section class="step" data-step="3" hidden>
+            <header class="step-head">
+              <h2 class="step-title">대관 · 꽃 · 주류</h2>
+              <p class="step-desc">식대 다음으로 금액이 큰 구간입니다. 꽃장식은 업그레이드 금액까지 합쳐서 넣으세요.</p>
+            </header>
+
+            <label class="field">
+              <span class="field-label">대관료 · 홀 사용료</span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="venueFee" data-type="number"><span class="unit">원</span></span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">꽃장식 <span class="tag">업그레이드 포함</span></span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="flowerFee" data-type="number"><span class="unit">원</span></span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">주류 · 음료 <span class="tag">1인당</span></span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="drinkPerPerson" data-type="number"><span class="unit">원</span></span>
+              <span class="field-help">주류·음료는 참석인원이 아니라 <b>청구인원 전체</b>에 붙습니다.</span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">폐백실 · 진행비 · 주차</span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="etcFee" data-type="number"><span class="unit">원</span></span>
+            </label>
+
+            <div class="ledger" data-live-box="step3"></div>
+          </section>
+
+          <!-- ── Step 4 ── -->
+          <section class="step" data-step="4" hidden>
+            <header class="step-head">
+              <h2 class="step-title">필수옵션</h2>
+              <p class="step-desc">홀에서 필수로 묶어 파는 항목입니다. 합계만 알면 합계로, 항목별로 받았다면 항목별로 넣으세요.</p>
+            </header>
+
+            <div class="field">
+              <span class="field-label">입력 방식</span>
+              <div class="seg" role="group" aria-label="필수옵션 입력 방식" data-toggle="optionMode">
+                <button type="button" class="seg-btn" data-value="total">합계</button>
+                <button type="button" class="seg-btn" data-value="detail">항목별</button>
+              </div>
+            </div>
+
+            <div data-when="optionMode=total">
+              <label class="field">
+                <span class="field-label">필수옵션 합계</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optionTotal" data-type="number"><span class="unit">원</span></span>
+              </label>
+            </div>
+
+            <div data-when="optionMode=detail">
+              <label class="field">
+                <span class="field-label">사회자</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optMc" data-type="number"><span class="unit">원</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">축가 · 연주</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optSong" data-type="number"><span class="unit">원</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">본식 스냅</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optSnap" data-type="number"><span class="unit">원</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">본식영상 · 원판</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optVideo" data-type="number"><span class="unit">원</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">혼주 메이크업 · 한복</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optMakeup" data-type="number"><span class="unit">원</span></span>
+              </label>
+              <label class="field">
+                <span class="field-label">케이크 · 연출 · 기타</span>
+                <span class="input-wrap"><input type="text" inputmode="numeric" data-field="optCake" data-type="number"><span class="unit">원</span></span>
+              </label>
+            </div>
+
+            <div class="ledger" data-live-box="step4"></div>
+          </section>
+
+          <!-- ── Step 5 ── -->
+          <section class="step" data-step="5" hidden>
+            <header class="step-head">
+              <h2 class="step-title">부가세 · 할인 · 축의금</h2>
+              <p class="step-desc">마지막입니다. 식대를 뺀 나머지 항목의 부가세 처리와 할인·축의금을 넣으면 순수 부담액까지 나옵니다.</p>
+            </header>
+
+            <div class="field">
+              <span class="field-label">식대 외 항목 부가세</span>
+              <div class="seg" role="group" aria-label="식대 외 항목 부가세" data-toggle="otherVatMode">
+                <button type="button" class="seg-btn" data-value="included">포함</button>
+                <button type="button" class="seg-btn" data-value="excluded">별도 10%</button>
+              </div>
+              <span class="field-help" data-help="otherVatMode"></span>
+            </div>
+
+            <label class="field">
+              <span class="field-label">할인 · 지원 합계</span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="discount" data-type="number"><span class="unit">원</span></span>
+              <span class="field-help">플래너 지원금, 제휴 할인, 프로모션 금액을 모두 더해 넣으세요.</span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">예상 축의금 <span class="tag">1인 평균</span></span>
+              <span class="input-wrap"><input type="text" inputmode="numeric" data-field="giftPerPerson" data-type="number"><span class="unit">원</span></span>
+              <span class="field-help">넣으면 결과에 <b>순수 부담액</b>이 함께 나옵니다. 비워두면 표시하지 않습니다.</span>
+            </label>
+
+            <label class="field">
+              <span class="field-label">웨딩홀 이름</span>
+              <span class="input-wrap"><input type="text" data-field="hallName" data-type="text" maxlength="30" placeholder="예: 그랜드컨벤션 3F 그랜드볼룸"></span>
+              <span class="field-help">비교함 카드에 표시됩니다.</span>
+            </label>
+
+            <div class="ledger" data-live-box="step5"></div>
+          </section>
+
+        </form>
+      </section>
+
+      <!-- ══ 결과 ═══════════════════════════════════════════ -->
+      <section class="view" id="viewResult" hidden>
+        <div id="resultRoot"></div>
+      </section>
+
+      <!-- ══ 비교함 ═════════════════════════════════════════ -->
+      <section class="view" id="viewCompare" hidden>
+        <div id="compareRoot"></div>
+      </section>
+
+    </main>
+
+    <footer class="foot">
+      <p class="disclaimer">견적 비교를 돕기 위한 참고용 도구입니다. 최종 금액과 조건은 반드시 <b>계약서 원문</b>으로 확인하세요.</p>
+      <p class="copyright">Sding</p>
+    </footer>
+
+    <div class="dock" id="dock">
+      <div class="dock-live" id="dockLive">
+        <div class="dl-cell">
+          <span class="dl-k">총 예상비용</span>
+          <strong class="dl-v" data-live="total">0원</strong>
+        </div>
+        <div class="dl-cell">
+          <span class="dl-k">1인당 실질단가</span>
+          <strong class="dl-v is-accent" data-live="per">0원</strong>
+        </div>
+      </div>
+      <div class="dock-actions" id="dockActions">
+        <button type="button" class="btn btn-quiet" id="btnPrev">
+          <svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg>
+          <span class="btn-label">이전</span>
+        </button>
+        <button type="button" class="btn btn-primary" id="btnNext">
+          <span class="btn-label">다음</span>
+          <span class="btn-orb" aria-hidden="true"><svg class="ic"><use href="#i-arrow-right"/></svg></span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/config.js"></script>
+<script src="js/format.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/store.js"></script>
+<script src="js/share.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
