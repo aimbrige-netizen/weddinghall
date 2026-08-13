@@ -258,7 +258,7 @@
       rows5.push({ label: '총 예상비용', value: Fmt.won(r.grandTotal), type: 'total' });
       if (r.hasGift) {
         rows5.push({ label: '예상 축의금', value: '-' + Fmt.won(r.giftTotal), type: 'minus',
-          memo: Fmt.won(r.giftPerPerson) + ' × 실제 참석 ' + Fmt.comma(r.attendedAdults) + '명' });
+          memo: Fmt.won(r.giftPerPerson) + ' × 예상 참석 ' + Fmt.comma(r.attendedAdults) + '명' });
         rows5.push({ label: '순수 부담액', value: Fmt.won(r.netBurden), type: 'total' });
       }
       box5.innerHTML = ledger('최종 합계', r.vatAdded > 0 ? ('별도 부가세 ' + Fmt.won(r.vatAdded) + ' 포함') : 'VAT 포함가 기준', rows5);
@@ -354,7 +354,7 @@
          +   '<p class="net-k">순수 부담액</p>'
          +   '<p class="net-v' + (r.netBurden < 0 ? ' is-negative' : '') + '">' + Fmt.won(r.netBurden) + '</p>'
          +   '<p class="net-desc">총 예상비용 ' + Fmt.won(r.grandTotal) + '에서 예상 축의금 ' + Fmt.won(r.giftTotal)
-         +     ' (1인 ' + Fmt.won(r.giftPerPerson) + ' × 실제 참석 ' + Fmt.comma(r.attendedAdults) + '명)을 뺀 금액입니다.</p>'
+         +     ' (1인 ' + Fmt.won(r.giftPerPerson) + ' × 예상 참석 ' + Fmt.comma(r.attendedAdults) + '명)을 뺀 금액입니다.</p>'
          + '</section>';
   }
 
@@ -363,10 +363,10 @@
          +   '<summary>이 계산이 세운 가정 보기</summary>'
          +   '<ul class="assump-body">'
          +     '<li>청구인원은 ' + (r.separate ? '양가 각각 MAX(보증, 참석)을 더해' : 'MAX(총 보증, 총 참석)으로') + ' 구했습니다.</li>'
-         +     '<li>식대와 주류·음료는 실제 참석이 아니라 <b>청구인원</b>에 곱했습니다.</li>'
+         +     '<li>식대와 주류·음료는 예상 참석이 아니라 <b>청구인원</b>에 곱했습니다.</li>'
          +     '<li>1인당 실질단가는 총 예상비용을 <b>예상 참석 ' + Fmt.comma(r.attendedTotal) + '명</b>(아동 포함)으로 나눈 값입니다.</li>'
          +     '<li>아동 식대는 청구인원과 별개로 추가 합산했습니다.</li>'
-         +     (r.hasGift ? '<li>예상 축의금은 실제 참석 성인 ' + Fmt.comma(r.attendedAdults) + '명 기준입니다.</li>' : '')
+         +     (r.hasGift ? '<li>예상 축의금은 예상 참석 성인 ' + Fmt.comma(r.attendedAdults) + '명 기준입니다.</li>' : '')
          +     '<li>부가세율은 10% 고정입니다.</li>'
          +   '</ul>'
          + '</details>';
@@ -395,7 +395,7 @@
       +     '<div class="doc-metric is-accent">'
       +       '<span class="doc-metric-k">1인당 실질단가</span>'
       +       '<strong class="doc-metric-v">' + Fmt.won(r.perPerson) + '</strong>'
-      +       '<span class="doc-metric-note">실제 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준</span>'
+      +       '<span class="doc-metric-note">예상 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준</span>'
       +     '</div>'
       +     '<div class="doc-metric">'
       +       '<span class="doc-metric-k">청구인원</span>'

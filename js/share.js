@@ -36,7 +36,7 @@ var Share = (function () {
     L.push('총 예상비용    ' + Fmt.won(r.grandTotal));
     L.push('1인당 실질단가  ' + Fmt.won(r.perPerson));
     L.push('');
-    L.push('· 청구인원 ' + Fmt.people(r.billed) + ' / 실제참석 ' + Fmt.people(r.attendedTotal));
+    L.push('· 청구인원 ' + Fmt.people(r.billed) + ' / 예상참석 ' + Fmt.people(r.attendedTotal));
     L.push('· 보증방식 ' + (r.separate ? '각보증' : '통합보증'));
     L.push('');
     L.push('── 내역 ──────────────');
@@ -175,37 +175,45 @@ var Share = (function () {
     ctx.fillText('견적 검산기', W - PAD, bandH / 2 + 10);
     ctx.textAlign = 'left';
 
-    var y = bandH + 66;
+    /* ── 수직 리듬 ─────────────────────────────────────────────────────
+       캔버스에는 line-height가 없으므로 모든 베이스라인을 직접 계산한다.
+       라벨→값처럼 붙어야 할 짝은 잉크 간격 20px 이상, 섹션 사이는 40px 이상.
+       (라벨 baseline + 폰트 ascent(≈0.72em) 만큼 띄워야 다음 줄 윗변이 겹치지 않는다) */
+    var eyebrowBase  = bandH + 80;              /* 'SDING 검산 결과' 20px */
+    var nameBase     = eyebrowBase + 66;        /* 홀 이름 46px */
+    var headRuleY    = nameBase + 28;
+    var totalLblBase = headRuleY + 58;          /* '총 예상비용' 21px */
+    var totalBase    = totalLblBase + 108;      /* 총액 100px */
+    var midRuleY     = totalBase + 38;
+    var colLblBase   = midRuleY + 52;           /* 2열 라벨 20px */
+    var colValBase   = colLblBase + 60;         /* 2열 값 46px */
+    var colNoteBase  = colValBase + 42;         /* 2열 주석 19px */
+    var listLblBase  = colNoteBase + 66;        /* '항목별 내역' 19px */
+    var listRuleY    = listLblBase + 20;
 
-    /* 대상 */
+    /* 발행 헤더 */
     ctx.fillStyle = C.orangeInk;
     ctx.font = f(700, 20);
-    tracked(ctx, 'SDING 검산 결과', PAD, y, 2.6);
-    y += 40;
+    tracked(ctx, 'SDING 검산 결과', PAD, eyebrowBase, 2.6);
 
     ctx.fillStyle = C.ink;
-    ctx.font = f(700, 44);
-    ctx.fillText(ellipsize(ctx, (s.hallName || '').trim() || '이름 없는 웨딩홀', innerW), PAD, y);
-    y += 26;
-    rule(ctx, y, C.ink, 2);
-    y += 58;
+    ctx.font = f(700, 46);
+    ctx.fillText(ellipsize(ctx, (s.hallName || '').trim() || '이름 없는 웨딩홀', innerW), PAD, nameBase);
+    rule(ctx, headRuleY, C.ink, 2);
 
     /* 총 예상비용 */
     ctx.fillStyle = C.ink3;
-    ctx.font = f(650, 22);
-    tracked(ctx, '총 예상비용', PAD, y, 1.8);
-    y += 76;
+    ctx.font = f(650, 21);
+    tracked(ctx, '총 예상비용', PAD, totalLblBase, 1.8);
 
     ctx.fillStyle = C.ink;
     ctx.font = f(800, 100);
     var totalStr = Fmt.comma(r.grandTotal);
-    ctx.fillText(totalStr, PAD, y);
+    ctx.fillText(totalStr, PAD, totalBase);
     var tw = ctx.measureText(totalStr).width;
     ctx.font = f(700, 46);
-    ctx.fillText('원', PAD + tw + 10, y);
-    y += 42;
-    rule(ctx, y, C.rule, 1);
-    y += 50;
+    ctx.fillText('원', PAD + tw + 12, totalBase);
+    rule(ctx, midRuleY, C.rule, 1);
 
     /* ── 2열 지표 — 결국 얼마 내는가를 나란히 ─────────────────────────── */
     var colW = innerW / 2;
@@ -216,25 +224,23 @@ var Share = (function () {
 
     ctx.fillStyle = C.ink3;
     ctx.font = f(650, 20);
-    tracked(ctx, '1인당 실질단가', PAD, y, 1.4);
-    tracked(ctx, rightLabel, col2, y, 1.4);
-    y += 48;
+    tracked(ctx, '1인당 실질단가', PAD, colLblBase, 1.4);
+    tracked(ctx, rightLabel, col2, colLblBase, 1.4);
 
     ctx.fillStyle = C.orangeInk;
     ctx.font = f(780, 46);
-    ctx.fillText(Fmt.comma(r.perPerson) + '원', PAD, y);
+    ctx.fillText(Fmt.comma(r.perPerson) + '원', PAD, colValBase);
     ctx.fillStyle = C.ink;
-    ctx.fillText(rightValue, col2, y);
-    y += 32;
+    ctx.fillText(rightValue, col2, colValBase);
 
     ctx.fillStyle = C.ink3;
     ctx.font = f(500, 19);
-    ctx.fillText('실제 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준', PAD, y);
-    ctx.fillText(rightNote, col2, y);
-    y += 50;
+    ctx.fillText('예상 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준', PAD, colNoteBase);
+    ctx.fillText(rightNote, col2, colNoteBase);
 
     /* ── 항목별 내역 — 재발행된 견적서답게 남는 공간은 원장이 채운다 ──── */
     var footY = H - 64;
+    var footRuleY = footY - 42;
     var items = [];
     for (var bi = 0; bi < r.breakdown.length; bi++) {
       var b = r.breakdown[bi];
@@ -242,19 +248,18 @@ var Share = (function () {
       items.push(b);
     }
 
-    var listTop = y + 16;
     ctx.fillStyle = C.ink2;
     ctx.font = f(700, 19);
-    tracked(ctx, '항목별 내역', PAD, listTop, 2.4);
-    listTop += 18;
-    rule(ctx, listTop, C.ink, 2);
+    tracked(ctx, '항목별 내역', PAD, listLblBase, 2.4);
+    rule(ctx, listRuleY, C.ink, 2);
 
     if (items.length) {
-      var availH = (footY - 70) - listTop;
-      var rowH = Math.min(60, Math.max(44, Math.floor(availH / items.length)));
+      var availH = (footRuleY - 28) - listRuleY;
+      var rowH = Math.min(62, Math.max(46, Math.floor(availH / items.length)));
       for (var j = 0; j < items.length; j++) {
         var it = items[j];
-        var base = listTop + rowH * (j + 1) - Math.round(rowH * 0.36);
+        /* 행 높이의 정중앙에 텍스트를 앉힌다 (baseline = 중앙 + cap/2) */
+        var base = listRuleY + rowH * j + Math.round(rowH / 2) + 8;
         ctx.fillStyle = C.ink2;
         ctx.font = f(550, 22);
         ctx.fillText(ellipsize(ctx, it.label, innerW - 320), PAD, base);
@@ -265,13 +270,13 @@ var Share = (function () {
         ctx.textAlign = 'left';
         if (j < items.length - 1) {
           ctx.fillStyle = C.rule;
-          ctx.fillRect(PAD, listTop + rowH * (j + 1), innerW, 1);
+          ctx.fillRect(PAD, listRuleY + rowH * (j + 1), innerW, 1);
         }
       }
     }
 
     /* ── 푸터 ────────────────────────────────────────────────────────── */
-    rule(ctx, footY - 42, C.rule, 1);
+    rule(ctx, footRuleY, C.rule, 1);
     ctx.fillStyle = C.ink3;
     ctx.font = f(500, 18);
     ctx.fillText('견적 비교를 돕기 위한 참고용 계산입니다. 최종 금액은 계약서 원문으로 확인하세요.', PAD, footY);

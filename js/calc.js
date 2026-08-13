@@ -101,7 +101,7 @@ var Calc = (function () {
     /* ── 축의금 · 순수 부담액 ──────────────────────────────────────────── */
     var giftPerPerson = N(s.giftPerPerson);
     var hasGift = giftPerPerson > 0 && attendedAdults > 0;
-    var giftTotal = giftPerPerson * attendedAdults;   /* 실제 참석 성인 기준 */
+    var giftTotal = giftPerPerson * attendedAdults;   /* 예상 참석 성인 기준 */
     var netBurden = grandTotal - giftTotal;
 
     /* ── 내역 ──────────────────────────────────────────────────────────── */
