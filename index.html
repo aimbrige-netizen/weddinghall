@@ -26,9 +26,10 @@
     trailing -0.035em. 오렌지는 진행·액션·현재 상태에만. 허수 구간 단 하나만 딥러스트(#B83200)로 완전히 잠긴다.
   STORY: 식대만 싼 견적서를 의심하는 예비부부가 5단계로 숫자를 옮겨 적고, 청구인원 기준 총액·1인당 실질단가·
     허수인원을 받아 홀 3곳을 나란히 비교한다.
-  FIRST VIEWPORT: 먹색 문서 헤더(로고 + 견적 검산기 + 비교함), 좌측 정렬 대형 헤드라인, 시작 버튼 없이 바로
-    Step 1 입력. 하단 고정 바에 실시간 총액·1인당과 다음 버튼.
-  FORM: 재발행된 견적서 (후보 1/7, 좌석도는 허수 구간에만 국한). seed: Node 미설치로 concept-seed.mjs 미실행, 수동 선정.
+  FIRST VIEWPORT: 먹색 문서 헤더(로고 + 견적 검산기 + 비교함) 아래 압축 헤드라인 밴드. 시작 버튼 없이
+    5개 섹션이 괘선으로 이어지는 한 페이지 연속 입력. 하단 고정 바에 실시간 총액·1인당과 결과 보기.
+  FORM: 재발행된 견적서 — 한 페이지 연속 원장 (후보 1/7, 좌석도는 허수 구간에만 국한).
+    seed: Node 미설치로 concept-seed.mjs 미실행, 수동 선정. 위저드판은 v1-wizard 브랜치에 보존.
   FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 -->
 
@@ -98,8 +99,8 @@
     </header>
 
     <div class="rail-hero" id="railHero">
-      <h1 class="hero-title">그 견적서,<br>1인당 <em>진짜 얼마</em>인가요?</h1>
-      <p class="hero-sub">식대 단가만 보면 저렴해 보입니다. 보증인원 · 대관료 · 꽃장식 · 주류 · 필수옵션 · 부가세까지 전부 넣고 청구인원 기준으로 다시 계산해 드립니다.</p>
+      <h1 class="hero-title">그 견적서, 1인당 <em>진짜 얼마</em>인가요?</h1>
+      <p class="hero-sub">전 항목을 넣고 청구인원 기준으로 다시 계산해 드립니다.</p>
 
       <div class="rail-live" id="railLive">
         <div class="rl-row">
@@ -117,16 +118,6 @@
       </div>
     </div>
 
-    <nav class="steps" id="steps" aria-label="입력 단계">
-      <ol class="steps-list">
-        <li><button type="button" class="pstep" data-goto="1"><span class="pnum">1</span><span class="plabel">하객</span></button></li>
-        <li><button type="button" class="pstep" data-goto="2"><span class="pnum">2</span><span class="plabel">식대</span></button></li>
-        <li><button type="button" class="pstep" data-goto="3"><span class="pnum">3</span><span class="plabel">대관·꽃</span></button></li>
-        <li><button type="button" class="pstep" data-goto="4"><span class="pnum">4</span><span class="plabel">옵션</span></button></li>
-        <li><button type="button" class="pstep" data-goto="5"><span class="pnum">5</span><span class="plabel">부가세</span></button></li>
-      </ol>
-      <div class="steps-track"><div class="steps-fill" id="stepsFill"></div></div>
-    </nav>
   </div>
 
   <div class="stage" id="stage">
@@ -143,7 +134,7 @@
         <form id="wizardForm" autocomplete="off" novalidate>
 
           <!-- ── Step 1 ── -->
-          <section class="step" data-step="1" hidden>
+          <section class="step" data-step="1">
             <header class="step-head">
               <h2 class="step-title">하객 · 보증인원</h2>
               <p class="step-desc">계약서의 <b>보증인원</b>과, 실제로 올 것 같은 <b>예상 참석인원</b>을 각각 넣으세요. 이 둘의 차이가 허수인원이 됩니다.</p>
@@ -208,7 +199,7 @@
           </section>
 
           <!-- ── Step 2 ── -->
-          <section class="step" data-step="2" hidden>
+          <section class="step" data-step="2">
             <header class="step-head">
               <h2 class="step-title">식대</h2>
               <p class="step-desc">식대는 참석인원이 아니라 <b>청구인원</b>에 곱해집니다. 부가세 포함 여부를 견적서에서 꼭 확인하세요.</p>
@@ -252,7 +243,7 @@
           </section>
 
           <!-- ── Step 3 ── -->
-          <section class="step" data-step="3" hidden>
+          <section class="step" data-step="3">
             <header class="step-head">
               <h2 class="step-title">대관 · 꽃 · 주류</h2>
               <p class="step-desc">식대 다음으로 금액이 큰 구간입니다. 꽃장식은 업그레이드 금액까지 합쳐서 넣으세요.</p>
@@ -283,7 +274,7 @@
           </section>
 
           <!-- ── Step 4 ── -->
-          <section class="step" data-step="4" hidden>
+          <section class="step" data-step="4">
             <header class="step-head">
               <h2 class="step-title">필수옵션</h2>
               <p class="step-desc">홀에서 필수로 묶어 파는 항목입니다. 합계만 알면 합계로, 항목별로 받았다면 항목별로 넣으세요.</p>
@@ -335,7 +326,7 @@
           </section>
 
           <!-- ── Step 5 ── -->
-          <section class="step" data-step="5" hidden>
+          <section class="step" data-step="5">
             <header class="step-head">
               <h2 class="step-title">부가세 · 할인 · 축의금</h2>
               <p class="step-desc">마지막입니다. 식대를 뺀 나머지 항목의 부가세 처리와 할인·축의금을 넣으면 순수 부담액까지 나옵니다.</p>
@@ -403,12 +394,8 @@
         </div>
       </div>
       <div class="dock-actions" id="dockActions">
-        <button type="button" class="btn btn-quiet" id="btnPrev">
-          <svg class="ic" aria-hidden="true"><use href="#i-arrow-left"/></svg>
-          <span class="btn-label">이전</span>
-        </button>
         <button type="button" class="btn btn-primary" id="btnNext">
-          <span class="btn-label">다음</span>
+          <span class="btn-label">결과 보기</span>
           <span class="btn-orb" aria-hidden="true"><svg class="ic"><use href="#i-arrow-right"/></svg></span>
         </button>
       </div>

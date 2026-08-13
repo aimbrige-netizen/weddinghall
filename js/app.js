@@ -1,8 +1,8 @@
 /* =============================================================================
-   app.js — 위저드 · 결과 · 비교함 연결
+   app.js — 입력 폼 · 결과 · 비교함 연결
 
-   뷰: wizard(5스텝) / result / compare
-   뒤로가기는 이전 스텝 → 이전 뷰 순으로 예측 가능하게 동작합니다(history API).
+   뷰: wizard(한 페이지 연속 입력) / result / compare
+   브라우저 뒤로가기는 이전 뷰로 예측 가능하게 동작합니다(history API).
    ========================================================================== */
 
 (function () {
@@ -27,11 +27,8 @@
     resultRoot:   $('#resultRoot'),
     compareRoot:  $('#compareRoot'),
     form:         $('#wizardForm'),
-    steps:        $('#steps'),
-    stepsFill:    $('#stepsFill'),
     notice:       $('#exampleNotice'),
     btnClearAll:  $('#btnClearAll'),
-    btnPrev:      $('#btnPrev'),
     btnNext:      $('#btnNext'),
     dock:         $('#dock'),
     dockLive:     $('#dockLive'),
@@ -172,16 +169,13 @@
   function renderLive() {
     var s = Store.all();
     var r = Calc.run(s);
-    var cur = Store.getStep();
 
     $$('[data-live="total"]').forEach(function (n) { n.textContent = Fmt.won(r.grandTotal); });
     $$('[data-live="per"]').forEach(function (n) { n.textContent = Fmt.won(r.perPerson); });
     $$('[data-live="phantom"]').forEach(function (n) { n.textContent = Fmt.people(r.phantom); });
 
-    /* 보이는 스텝의 장부만 다시 그린다 (타이핑 중 불필요한 리페인트 방지) */
-
     /* Step 1 */
-    var box1 = cur === 1 ? $('[data-live-box="step1"]') : null;
+    var box1 = $('[data-live-box="step1"]');
     if (box1) {
       box1.innerHTML = ledger('인원 확인', r.separate ? '각보증' : '통합보증', [
         { label: '청구인원', value: Fmt.people(r.billed),
@@ -195,7 +189,7 @@
     }
 
     /* Step 2 */
-    var box2 = cur === 2 ? $('[data-live-box="step2"]') : null;
+    var box2 = $('[data-live-box="step2"]');
     if (box2) {
       var rows2 = [
         { label: '성인 식대', value: Fmt.won(r.mealAdult),
@@ -210,7 +204,7 @@
     }
 
     /* Step 3 */
-    var box3 = cur === 3 ? $('[data-live-box="step3"]') : null;
+    var box3 = $('[data-live-box="step3"]');
     if (box3) {
       box3.innerHTML = ledger('대관 · 꽃 · 주류 소계', '', [
         { label: '대관료 · 홀 사용료', value: Fmt.won(r.venue) },
@@ -223,7 +217,7 @@
     }
 
     /* Step 4 */
-    var box4 = cur === 4 ? $('[data-live-box="step4"]') : null;
+    var box4 = $('[data-live-box="step4"]');
     if (box4) {
       var rows4 = [];
       if (s.optionMode === 'detail') {
@@ -238,7 +232,7 @@
     }
 
     /* Step 5 */
-    var box5 = cur === 5 ? $('[data-live-box="step5"]') : null;
+    var box5 = $('[data-live-box="step5"]');
     if (box5) {
       var rows5 = [
         { label: '식대', value: Fmt.won(r.mealTotal) },
@@ -261,45 +255,6 @@
     return r;
   }
 
-  /* ── 스텝 ─────────────────────────────────────────────────────────────── */
-  function renderStep() {
-    var step = Store.getStep();
-
-    $$('.step', el.form).forEach(function (sec) {
-      var n = parseInt(sec.getAttribute('data-step'), 10);
-      if (n === step) sec.removeAttribute('hidden');
-      else sec.setAttribute('hidden', '');
-    });
-
-    $$('.pstep', el.steps).forEach(function (btn) {
-      var n = parseInt(btn.getAttribute('data-goto'), 10);
-      btn.classList.toggle('is-current', n === step);
-      btn.classList.toggle('is-done', n < step);
-      btn.setAttribute('aria-current', n === step ? 'step' : 'false');
-    });
-
-    el.stepsFill.style.width = (step / 5 * 100) + '%';
-    if (el.btnPrev) el.btnPrev.disabled = step === 1;
-    var nextLabel = el.btnNext ? $('.btn-label', el.btnNext) : null;
-    if (nextLabel) nextLabel.textContent = step === 5 ? '결과 보기' : '다음';
-  }
-
-  function goStep(n, push) {
-    var prev = Store.getStep();
-    Store.setStep(n);
-    renderStep();
-    renderLive();
-    if (push !== false) pushHistory();
-    if (prev !== Store.getStep()) scrollToTop();
-  }
-
-  function scrollToTop() {
-    var y = 0;
-    var stepsTop = el.steps ? el.steps.getBoundingClientRect().top + window.pageYOffset : 0;
-    if (window.innerWidth < 1000) y = Math.max(0, stepsTop - 54);
-    window.scrollTo({ top: y, behavior: reduceMotion ? 'auto' : 'smooth' });
-  }
-
   /* ── 뷰 전환 ──────────────────────────────────────────────────────────── */
   function setView(next, push) {
     view = next;
@@ -318,21 +273,13 @@
 
   function pushHistory() {
     if (suppressHistory) return;
-    var st = { view: view, step: Store.getStep() };
-    try { history.pushState(st, ''); } catch (e) { /* file:// 등 무시 */ }
+    try { history.pushState({ view: view }, ''); } catch (e) { /* file:// 등 무시 */ }
   }
 
   window.addEventListener('popstate', function (e) {
     var st = e.state;
     suppressHistory = true;
-    if (!st) {
-      setView('wizard', false);
-      Store.setStep(1);
-      renderStep();
-    } else {
-      if (st.view !== view) setView(st.view, false);
-      if (st.view === 'wizard' && st.step) { Store.setStep(st.step); renderStep(); }
-    }
+    setView(st && st.view ? st.view : 'wizard', false);
     suppressHistory = false;
   });
 
@@ -342,12 +289,9 @@
   function renderDockWizard() {
     el.dockLive.hidden = false;
     el.dockActions.innerHTML =
-        '<button type="button" class="btn btn-quiet" id="btnPrev">' + icon('i-arrow-left') + '<span class="btn-label">이전</span></button>'
-      + '<button type="button" class="btn btn-primary" id="btnNext"><span class="btn-label">다음</span>'
+        '<button type="button" class="btn btn-primary" id="btnNext"><span class="btn-label">결과 보기</span>'
       +   '<span class="btn-orb" aria-hidden="true">' + icon('i-arrow-right') + '</span></button>';
-    el.btnPrev = $('#btnPrev');
     el.btnNext = $('#btnNext');
-    renderStep();
   }
 
   function renderDockResult() {
@@ -749,21 +693,10 @@
     if (actions[act]) { e.preventDefault(); actions[act](target); }
   });
 
-  /* 스텝 이동 */
-  el.steps.addEventListener('click', function (e) {
-    var btn = e.target.closest ? e.target.closest('.pstep') : null;
-    if (!btn) return;
-    if (view !== 'wizard') setView('wizard', false);
-    goStep(parseInt(btn.getAttribute('data-goto'), 10));
-  });
-
   el.dockActions.addEventListener('click', function (e) {
     var btn = e.target.closest ? e.target.closest('button') : null;
     if (!btn || view !== 'wizard') return;
-    if (btn.id === 'btnPrev') goStep(Store.getStep() - 1);
     if (btn.id === 'btnNext') {
-      var step = Store.getStep();
-      if (step < 5) { goStep(step + 1); return; }
       var r = Calc.run(Store.all());
       if (r.grandTotal <= 0) { toast('견적서 숫자를 먼저 입력해 주세요'); return; }
       setView('result');
@@ -781,7 +714,7 @@
     Store.clearAll();
     writeInputs();
     renderLive();
-    goStep(1, false);
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
     toast('입력값을 비웠습니다');
   });
 
@@ -803,7 +736,7 @@
   renderBadge();
   renderDockWizard();
   setView('wizard', false);
-  try { history.replaceState({ view: 'wizard', step: Store.getStep() }, ''); } catch (e) { /* noop */ }
+  try { history.replaceState({ view: 'wizard' }, ''); } catch (e) { /* noop */ }
 
   if (!Store.storageAvailable) {
     setTimeout(function () { toast('이 브라우저에서는 입력값이 저장되지 않습니다'); }, 900);
