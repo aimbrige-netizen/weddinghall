@@ -438,7 +438,7 @@
   }
 
   function ctaMarkup() {
-    if (!CONFIG.cta.enabled) return '';
+    if (!CONFIG.cta.enabled || !CONFIG.cta.url) return '';
     return '<aside class="cta reveal">'
          +   '<p class="cta-title">' + esc(CONFIG.cta.title) + '</p>'
          +   '<p class="cta-desc">' + esc(CONFIG.cta.desc) + '</p>'

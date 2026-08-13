@@ -103,11 +103,13 @@ DESIGN.md           시각 시스템 (토큰 · 타이포 · 모션 규칙)
 전부 [`js/config.js`](js/config.js) 한 곳에서 바꿉니다.
 
 ```js
-CONFIG.cta.enabled = false;   // 리드 CTA 끄고 순수 유틸리티로 운영
-CONFIG.cta.url     = '...';   // ★ 현재 https://sding.co.kr 자리표시 — 실제 링크로 교체 필요
-CONFIG.MAX_COMPARE = 3;       // 비교함 개수
-CONFIG.example     = { ... }; // 프리필 예시값
+CONFIG.cta.url     = 'https://...'; // 실제 Sding 상담/랜딩 주소
+CONFIG.cta.enabled = true;          // 위 주소를 넣은 뒤 켜면 결과 하단에 리드 CTA 노출
+CONFIG.MAX_COMPARE = 3;             // 비교함 개수
+CONFIG.example     = { ... };       // 프리필 예시값
 ```
+
+리드 CTA는 **기본값이 꺼짐**입니다. `url` 이 비어 있으면 `enabled` 와 무관하게 렌더되지 않으므로, 잘못된 주소로 링크가 나가는 일은 없습니다.
 
 ## 브라우저 지원
 
