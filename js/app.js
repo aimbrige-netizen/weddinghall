@@ -190,7 +190,7 @@
 
     $$('[data-live="total"]').forEach(function (n) { n.textContent = Fmt.won(r.grandTotal); });
     $$('[data-live="per"]').forEach(function (n) { n.textContent = Fmt.won(r.perPerson); });
-    $$('[data-live="phantom"]').forEach(function (n) { n.textContent = Fmt.people(r.phantom); });
+    $$('[data-live="billed"]').forEach(function (n) { n.textContent = Fmt.people(r.billed); });
 
     /* Step 1 */
     var box1 = $('[data-live-box="step1"]');
@@ -200,9 +200,7 @@
           memo: r.separate
             ? '양가 각각 MAX(보증, 참석)의 합'
             : 'MAX(총 보증 ' + Fmt.comma(r.guaranteeTotal) + ', 총 참석 ' + Fmt.comma(r.attendedAdults) + ')' },
-        { label: '실제 참석(성인)', value: Fmt.people(r.attendedAdults) },
-        { label: '허수인원', value: Fmt.people(r.phantom), flag: r.phantom > 0,
-          memo: r.phantom > 0 ? '안 왔는데 결제되는 자리' : '보증인원을 참석인원이 채웁니다' }
+        { label: '예상 참석(성인)', value: Fmt.people(r.attendedAdults) }
       ]);
     }
 
@@ -331,33 +329,6 @@
   }
 
   /* ── 결과 ─────────────────────────────────────────────────────────────── */
-  /* 허수 구간.
-     장식(좌석 도트)을 걷어내고 뺄셈 자체를 보여준다. 검산기가 자기 셈을 공개하는 편이
-     이 제품에 맞고, 식(式)만 보이면 '누가 안 온다'는 단정도 생기지 않는다. */
-  function phantomMarkup(r) {
-    if (r.phantom <= 0) {
-      return '<section class="phantom reveal">'
-           +   '<p class="phantom-k">허수인원</p>'
-           +   '<p class="warn-figure">0명</p>'
-           +   '<p class="phantom-math">청구 ' + Fmt.comma(r.billed) + '명'
-           +     '<span class="op">−</span>예상 참석 ' + Fmt.comma(r.attendedAdults) + '명</p>'
-           +   '<p class="phantom-desc">예상 참석이 보증인원 이상이라 차액이 없습니다. 청구인원은 실제 참석 쪽을 따라갑니다.</p>'
-           + '</section>';
-    }
-    var unitCost = r.adultUnit + r.drinkUnit;
-    return '<section class="phantom reveal">'
-         +   '<p class="phantom-k">허수인원</p>'
-         +   '<p class="warn-figure">' + Fmt.comma(r.phantom) + '명<span class="sep">·</span>' + Fmt.comma(r.phantomCost) + '원</p>'
-         +   '<p class="phantom-math">청구 ' + Fmt.comma(r.billed) + '명'
-         +     '<span class="op">−</span>예상 참석 ' + Fmt.comma(r.attendedAdults) + '명'
-         +     '<span class="op">=</span><b>' + Fmt.comma(r.phantom) + '명</b>'
-         +     '<span class="op">×</span>' + Fmt.comma(unitCost) + '원</p>'
-         +   '<p class="phantom-desc">예상 참석은 직접 입력하신 값입니다. 식대 ' + Fmt.won(r.adultUnit)
-         +     (r.drinkUnit > 0 ? '과 주류 ' + Fmt.won(r.drinkUnit) : '')
-         +     '이 참석 여부와 무관하게 청구인원 전체에 붙습니다.</p>'
-         + '</section>';
-  }
-
   function breakdownMarkup(r) {
     var rows = [];
     for (var i = 0; i < r.breakdown.length; i++) {
@@ -393,9 +364,8 @@
          +   '<ul class="assump-body">'
          +     '<li>청구인원은 ' + (r.separate ? '양가 각각 MAX(보증, 참석)을 더해' : 'MAX(총 보증, 총 참석)으로') + ' 구했습니다.</li>'
          +     '<li>식대와 주류·음료는 실제 참석이 아니라 <b>청구인원</b>에 곱했습니다.</li>'
-         +     '<li>1인당 실질단가는 총 예상비용을 <b>실제 참석 ' + Fmt.comma(r.attendedTotal) + '명</b>(아동 포함)으로 나눈 값입니다.</li>'
+         +     '<li>1인당 실질단가는 총 예상비용을 <b>예상 참석 ' + Fmt.comma(r.attendedTotal) + '명</b>(아동 포함)으로 나눈 값입니다.</li>'
          +     '<li>아동 식대는 청구인원과 별개로 추가 합산했습니다.</li>'
-         +     '<li>허수 비용은 허수인원 × (성인 식대 + 주류 1인당)으로 계산했습니다.</li>'
          +     (r.hasGift ? '<li>예상 축의금은 실제 참석 성인 ' + Fmt.comma(r.attendedAdults) + '명 기준입니다.</li>' : '')
          +     '<li>부가세율은 10% 고정입니다.</li>'
          +   '</ul>'
@@ -418,8 +388,7 @@
       +   '<div class="doc-total-block reveal">'
       +     '<p class="doc-total-k">총 예상비용</p>'
       +     '<p class="doc-total"><span id="totalCount">' + Fmt.comma(r.grandTotal) + '</span><span class="won">원</span></p>'
-      +     '<p class="doc-line">보증인원 기준 <b>' + Fmt.comma(r.billed) + '명</b>을 결제하고, 실제로는 <b>'
-      +       Fmt.comma(r.attendedTotal) + '명</b>이 옵니다.</p>'
+      +     '<p class="doc-line">청구인원 <b>' + Fmt.comma(r.billed) + '명</b> 기준으로 항목별 단가를 합산한 금액입니다.</p>'
       +   '</div>'
 
       +   '<div class="doc-metrics reveal">'
@@ -435,7 +404,6 @@
       +     '</div>'
       +   '</div>'
 
-      +   phantomMarkup(r)
       +   breakdownMarkup(r)
       +   netMarkup(r)
 
@@ -533,8 +501,8 @@
            +       '<strong class="cmp-v">' + Fmt.won(r.perPerson) + diff + '</strong></div>'
            +     '<div class="cmp-metric"><span class="cmp-k">총 예상비용</span>'
            +       '<strong class="cmp-v">' + Fmt.korShort(r.grandTotal) + '</strong></div>'
-           +     '<div class="cmp-metric"><span class="cmp-k">허수인원</span>'
-           +       '<strong class="cmp-v">' + Fmt.comma(r.phantom) + '명</strong></div>'
+           +     '<div class="cmp-metric"><span class="cmp-k">청구인원</span>'
+           +       '<strong class="cmp-v">' + Fmt.comma(r.billed) + '명</strong></div>'
            +   '</div>'
            +   '<details class="cmp-detail"><summary>전체 내역 보기</summary>'
            +     '<div class="ledger">' + ledgerRows(rows) + '</div>'
@@ -571,7 +539,6 @@
       L.push('   총 예상비용   ' + Fmt.won(r.grandTotal));
       L.push('   1인당 실질단가 ' + Fmt.won(r.perPerson));
       L.push('   청구/참석     ' + Fmt.comma(r.billed) + '명 / ' + Fmt.comma(r.attendedTotal) + '명');
-      L.push('   허수인원      ' + Fmt.people(r.phantom) + (r.phantom > 0 ? ' (' + Fmt.won(r.phantomCost) + ')' : ''));
       L.push('');
     });
     L.push('※ 참고용 계산입니다. 최종 금액은 계약서 원문으로 확인하세요.');

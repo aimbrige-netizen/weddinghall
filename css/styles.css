@@ -1,7 +1,7 @@
 /* ==========================================================================
    Sding 웨딩홀 견적 검산기
    Visual world: "재발행된 견적서" — 원장 괘선 · 표 정렬 숫자 · 발행 헤더.
-   카드를 쌓지 않는다. 구획은 1px 괘선이 한다. 색은 진행/액션/허수에만 쓴다.
+   카드를 쌓지 않는다. 구획은 1px 괘선이 한다. 색은 진행/액션에만 쓴다.
    ========================================================================== */
 
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
@@ -27,9 +27,7 @@
   --orange:     #FF5416;
   --orange-ink: #C63B00;   /*  5.1:1 on sheet — 작은 글씨용 */
   --orange-wash:#FFF0E9;
-  --rust:       #B83200;   /*  허수 구간 전용 */
-  --rust-tint:  #FFD9C9;   /*  4.6:1 on rust */
-  --rust-line:  rgba(255,255,255,.22);
+  --rust:       #B83200;   /*  비교 카드 차액 상승 표기용 */
 
   /* Metrics */
   --r-input: 10px;
@@ -93,7 +91,7 @@ input { caret-color: var(--orange); }
 .dock :focus-visible { outline-color: #fff; }
 
 /* 숫자는 항상 표 정렬 */
-.num, .rl-v, .dl-v, .led-v, .doc-total, .doc-metric-v, .cmp-v, .warn-figure, .net-v, .input-wrap input {
+.num, .rl-v, .dl-v, .led-v, .doc-total, .doc-metric-v, .cmp-v, .net-v, .input-wrap input {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
@@ -432,7 +430,6 @@ input { caret-color: var(--orange); }
 }
 .led-row.is-total .led-k { font-weight: 700; color: var(--ink); font-size: 14px; }
 .led-row.is-total .led-v { font-weight: 780; font-size: 19px; letter-spacing: -.035em; }
-.led-row.is-flag .led-k, .led-row.is-flag .led-v { color: var(--rust); }
 .led-note { margin-top: 10px; font-size: 11.5px; line-height: 1.6; color: var(--ink-3); }
 
 /* ── Dock ───────────────────────────────────────────────────────────────── */
@@ -574,52 +571,6 @@ input { caret-color: var(--orange); }
 }
 .doc-metric.is-accent .doc-metric-v { color: var(--orange-ink); }
 .doc-metric-note { display: block; margin-top: 3px; font-size: 11px; color: var(--ink-3); }
-
-/* 허수 — 이 페이지에서 유일하게 색으로 잠기는 구간 */
-.phantom {
-  margin: 22px 0 0;
-  padding: 22px 20px;
-  background: var(--rust);
-  border-radius: var(--r-panel);
-  color: #fff;
-}
-.phantom-k {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: .11em;
-  color: var(--rust-tint);
-}
-.warn-figure {
-  margin-top: 6px;
-  font-size: 30px;
-  font-weight: 800;
-  letter-spacing: -.045em;
-  line-height: 1.15;
-}
-.warn-figure .sep { color: var(--rust-tint); font-weight: 500; margin: 0 8px; }
-
-/* 계산식 자체를 보여준다. 결론이 아니라 셈이 근거다. */
-.phantom-math {
-  margin-top: 16px;
-  padding-top: 15px;
-  border-top: 1px solid var(--rust-line);
-  font-size: 14.5px;
-  font-weight: 650;
-  letter-spacing: -.022em;
-  line-height: 1.7;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-}
-.phantom-math .op {
-  display: inline-block;
-  margin: 0 9px;
-  font-weight: 400;
-  color: var(--rust-tint);
-}
-.phantom-math b { font-weight: 780; }
-
-.phantom-desc { margin-top: 12px; font-size: 12.5px; line-height: 1.65; color: var(--rust-tint); }
-.phantom-desc b { color: #fff; font-weight: 650; }
 
 /* 결과 섹션 */
 .doc-section { margin-top: 26px; }
@@ -949,7 +900,6 @@ input { caret-color: var(--orange); }
     scroll-behavior: auto !important;
   }
   .reveal { opacity: 1; transform: none; }
-  .seat.is-phantom { transform: none; opacity: 1; }
 }
 
 /* ══ Print — 결과지를 그대로 출력 ═════════════════════════════════════════ */
@@ -957,9 +907,5 @@ input { caret-color: var(--orange); }
   .rail, .dock, .actions, .toast, .notice, .steps { display: none !important; }
   body { background: #fff; }
   .stage { padding: 0; }
-  .phantom { background: #fff; color: var(--ink); border: 1.5px solid var(--rust); }
-  .phantom-k, .phantom-desc { color: var(--rust); }
-  .phantom-math { color: var(--ink); border-top-color: var(--rule); }
-  .phantom-math .op { color: var(--ink-3); }
   .doc { padding: 0; }
 }

@@ -35,9 +35,6 @@ var Share = (function () {
     L.push('');
     L.push('총 예상비용    ' + Fmt.won(r.grandTotal));
     L.push('1인당 실질단가  ' + Fmt.won(r.perPerson));
-    if (r.phantom > 0) {
-      L.push('허수인원       ' + Fmt.people(r.phantom) + ' (' + Fmt.won(r.phantomCost) + ')');
-    }
     L.push('');
     L.push('· 청구인원 ' + Fmt.people(r.billed) + ' / 실제참석 ' + Fmt.people(r.attendedTotal));
     L.push('· 보증방식 ' + (r.separate ? '각보증' : '통합보증'));
@@ -236,77 +233,42 @@ var Share = (function () {
     ctx.fillText(rightNote, col2, y);
     y += 50;
 
-    /* ── 허수 블록 ─────────────────────────────────────────────────────
-       좌석 도트를 걷어내고 뺄셈 자체를 싣는다. 결론이 아니라 셈이 근거다. */
-    var padIn = 40;
+    /* ── 항목별 내역 — 재발행된 견적서답게 남는 공간은 원장이 채운다 ──── */
     var footY = H - 64;
-    var hasPhantom = r.phantom > 0;
-
-    var blockY = y;
-    var blockH = padIn + 26 + 70 + (hasPhantom ? 34 + 30 : 30) + 34 + padIn;
-
-    /* 남는 세로 공간을 블록이 흡수해 프레임을 채운다 */
-    var slack = Math.max(0, (footY - 78) - (blockY + blockH));
-    var grow = Math.min(slack * 0.62, 250);
-    blockH += grow;
-    var bo = grow / 2;
-
-    ctx.fillStyle = C.rust;
-    roundRect(ctx, PAD, blockY, innerW, blockH, 22);
-    ctx.fill();
-
-    var bx = PAD + padIn;
-    var by = blockY + padIn + 20 + bo;
-    ctx.fillStyle = C.rustTint;
-    ctx.font = f(700, 20);
-    tracked(ctx, '허수인원', bx, by, 2.4);
-    by += 68;
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = f(800, 62);
-    if (hasPhantom) {
-      var pStr = Fmt.comma(r.phantom) + '명';
-      ctx.fillText(pStr, bx, by);
-      var pw = ctx.measureText(pStr).width;
-      ctx.fillStyle = C.rustTint;
-      ctx.font = f(400, 46);
-      ctx.fillText('·', bx + pw + 22, by);
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = f(800, 62);
-      ctx.fillText(Fmt.comma(r.phantomCost) + '원', bx + pw + 52, by);
-    } else {
-      ctx.fillText('0명', bx, by);
-    }
-    by += 40;
-
-    /* 계산식 한 줄 */
-    var mathY = by + 30;
-    ctx.fillStyle = 'rgba(255,255,255,.22)';
-    ctx.fillRect(bx, by, innerW - padIn * 2, 1);
-
-    ctx.font = f(650, 21);
-    var segs = hasPhantom
-      ? [['청구 ' + Fmt.comma(r.billed) + '명', '#FFFFFF'], ['−', C.rustTint],
-         ['예상 참석 ' + Fmt.comma(r.attendedAdults) + '명', '#FFFFFF'], ['=', C.rustTint],
-         [Fmt.comma(r.phantom) + '명', '#FFFFFF'], ['×', C.rustTint],
-         [Fmt.comma(r.adultUnit + r.drinkUnit) + '원', '#FFFFFF']]
-      : [['청구 ' + Fmt.comma(r.billed) + '명', '#FFFFFF'], ['−', C.rustTint],
-         ['예상 참석 ' + Fmt.comma(r.attendedAdults) + '명', '#FFFFFF'], ['=', C.rustTint],
-         ['0명', '#FFFFFF']];
-    var mx = bx;
-    for (var si = 0; si < segs.length; si++) {
-      ctx.fillStyle = segs[si][1];
-      ctx.font = segs[si][1] === C.rustTint ? f(400, 21) : f(650, 21);
-      ctx.fillText(segs[si][0], mx, mathY);
-      mx += ctx.measureText(segs[si][0]).width + 13;
+    var items = [];
+    for (var bi = 0; bi < r.breakdown.length; bi++) {
+      var b = r.breakdown[bi];
+      if (b.type === 'sub' || b.type === 'total') continue;
+      items.push(b);
     }
 
-    ctx.fillStyle = C.rustTint;
-    ctx.font = f(500, 18);
-    ctx.fillText(
-      hasPhantom ? '예상 참석은 직접 입력한 값입니다.' : '예상 참석이 보증인원 이상이라 차액이 없습니다.',
-      bx, mathY + 34
-    );
+    var listTop = y + 16;
+    ctx.fillStyle = C.ink2;
+    ctx.font = f(700, 19);
+    tracked(ctx, '항목별 내역', PAD, listTop, 2.4);
+    listTop += 18;
+    rule(ctx, listTop, C.ink, 2);
+
+    if (items.length) {
+      var availH = (footY - 70) - listTop;
+      var rowH = Math.min(60, Math.max(44, Math.floor(availH / items.length)));
+      for (var j = 0; j < items.length; j++) {
+        var it = items[j];
+        var base = listTop + rowH * (j + 1) - Math.round(rowH * 0.36);
+        ctx.fillStyle = C.ink2;
+        ctx.font = f(550, 22);
+        ctx.fillText(ellipsize(ctx, it.label, innerW - 320), PAD, base);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = it.amount < 0 ? C.orangeInk : C.ink;
+        ctx.font = f(700, 23);
+        ctx.fillText((it.amount < 0 ? '-' : '') + Fmt.comma(Math.abs(it.amount)) + '원', W - PAD, base);
+        ctx.textAlign = 'left';
+        if (j < items.length - 1) {
+          ctx.fillStyle = C.rule;
+          ctx.fillRect(PAD, listTop + rowH * (j + 1), innerW, 1);
+        }
+      }
+    }
 
     /* ── 푸터 ────────────────────────────────────────────────────────── */
     rule(ctx, footY - 42, C.rule, 1);

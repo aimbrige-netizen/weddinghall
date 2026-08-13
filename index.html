@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0B0B0C">
 <title>Sding 웨딩홀 견적 검산기 · 그 견적서, 1인당 진짜 얼마인가요?</title>
-<meta name="description" content="식대 단가만 보면 저렴해 보이는 웨딩홀 견적서. 보증인원·대관료·꽃장식·주류·필수옵션·부가세까지 전부 넣고 청구인원 기준으로 다시 계산해 1인당 실질단가와 허수인원을 알려드립니다.">
+<meta name="description" content="식대 단가만 보면 저렴해 보이는 웨딩홀 견적서. 보증인원·대관료·꽃장식·주류·필수옵션·부가세까지 전부 넣고 청구인원 기준으로 다시 계산해 총비용과 1인당 실질단가를 알려드립니다.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/favicon.svg">
 <meta property="og:type" content="website">
@@ -23,13 +23,14 @@
   THESIS: 견적서를 다시 발행한다. 계산기 UI(카드 나열·배지·차트)를 거부하고, 사용자가 손에 들고 있는
     견적서와 같은 문법 — 원장 괘선, 표 정렬 숫자, 발행 헤더 — 으로 답한다.
   OWN-WORLD: 본 화이트 캔버스(#F7F6F3)에 먹색 문서 헤더. 카드 대신 1px 괘선으로 구획. 숫자는 tabular 800,
-    trailing -0.035em. 오렌지는 진행·액션·현재 상태에만. 허수 구간 단 하나만 딥러스트(#B83200)로 완전히 잠긴다.
-  STORY: 식대만 싼 견적서를 의심하는 예비부부가 5단계로 숫자를 옮겨 적고, 청구인원 기준 총액·1인당 실질단가·
-    허수인원을 받아 홀 3곳을 나란히 비교한다.
+    trailing -0.035em. 오렌지는 진행·액션·현재 상태에만 (Restrained).
+  STORY: 식대만 싼 견적서를 의심하는 예비부부가 숫자를 옮겨 적고, 청구인원 기준 총액과
+    1인당 실질단가를 받아 홀 3곳을 나란히 비교한다.
   FIRST VIEWPORT: 먹색 문서 헤더(로고 + 견적 검산기 + 비교함) 아래 압축 헤드라인 밴드. 시작 버튼 없이
     5개 섹션이 괘선으로 이어지는 한 페이지 연속 입력. 하단 고정 바에 실시간 총액·1인당과 결과 보기.
-  FORM: 재발행된 견적서 — 한 페이지 연속 원장 (후보 1/7, 좌석도는 허수 구간에만 국한).
+  FORM: 재발행된 견적서 — 한 페이지 연속 원장 (후보 1/7).
     seed: Node 미설치로 concept-seed.mjs 미실행, 수동 선정. 위저드판은 v1-wizard 브랜치에 보존.
+    허수인원 개념은 2026-08-13 사용자 결정으로 전 화면에서 제거.
   FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 -->
 
@@ -112,8 +113,8 @@
           <span class="rl-v is-accent" data-live="per">0원</span>
         </div>
         <div class="rl-row">
-          <span class="rl-k">허수인원</span>
-          <span class="rl-v" data-live="phantom">0명</span>
+          <span class="rl-k">청구인원</span>
+          <span class="rl-v" data-live="billed">0명</span>
         </div>
       </div>
     </div>
@@ -137,7 +138,7 @@
           <section class="step" data-step="1">
             <header class="step-head">
               <h2 class="step-title">하객 · 보증인원</h2>
-              <p class="step-desc">계약서의 <b>보증인원</b>과, 실제로 올 것 같은 <b>예상 참석인원</b>을 각각 넣으세요. 이 둘의 차이가 허수인원이 됩니다.</p>
+              <p class="step-desc">계약서의 <b>보증인원</b>과, 실제로 올 것 같은 <b>예상 참석인원</b>을 각각 넣으세요. 식대와 주류는 둘 중 큰 쪽인 <b>청구인원</b>에 곱해집니다.</p>
             </header>
 
             <div class="field">
