@@ -331,47 +331,30 @@
   }
 
   /* ── 결과 ─────────────────────────────────────────────────────────────── */
-  function seatsMarkup(r) {
-    if (r.billed <= 0) return '';
-    var unit = r.billed > 320 ? Math.ceil(r.billed / 320) : 1;
-    var dots = Math.ceil(r.billed / unit);
-    var phantomDots = Math.min(dots, Math.round(r.phantom / unit));
-    var attendedDots = dots - phantomDots;
-    var html = '<div class="seats" aria-hidden="true">';
-    for (var i = 0; i < dots; i++) {
-      var isPhantom = i >= attendedDots;
-      var delay = isPhantom ? Math.min(460, (i - attendedDots) * 6) : 0;
-      html += '<span class="seat' + (isPhantom ? ' is-phantom' : '') + '"'
-            + (isPhantom ? ' style="animation-delay:' + delay + 'ms"' : '') + '></span>';
-    }
-    html += '</div>';
-    /* 위 지표의 '실제 참석'은 아동 포함이라 같은 말을 쓰면 숫자가 어긋나 보인다.
-       좌석도는 성인 기준이므로 '앉는 자리 / 비는 자리'로 부른다. */
-    html += '<p class="seats-legend">'
-          +   '<span><span class="seat"></span>앉는 자리 ' + Fmt.comma(r.attendedAdults) + '</span>'
-          +   '<span><span class="seat is-phantom" style="animation:none;opacity:1;transform:none"></span>비는 자리 ' + Fmt.comma(r.phantom) + '</span>'
-          +   (unit > 1 ? '<span>점 1개 = ' + unit + '명</span>' : '')
-          + '</p>';
-    return html;
-  }
-
+  /* 허수 구간.
+     장식(좌석 도트)을 걷어내고 뺄셈 자체를 보여준다. 검산기가 자기 셈을 공개하는 편이
+     이 제품에 맞고, 식(式)만 보이면 '누가 안 온다'는 단정도 생기지 않는다. */
   function phantomMarkup(r) {
     if (r.phantom <= 0) {
       return '<section class="phantom reveal">'
            +   '<p class="phantom-k">허수인원</p>'
-           +   '<p class="warn-figure">없음</p>'
-           +   '<p class="phantom-desc">보증인원을 실제 참석인원이 채웁니다. 버려지는 자리 없이 계산된 견적입니다.</p>'
+           +   '<p class="warn-figure">0명</p>'
+           +   '<p class="phantom-math">청구 ' + Fmt.comma(r.billed) + '명'
+           +     '<span class="op">−</span>예상 참석 ' + Fmt.comma(r.attendedAdults) + '명</p>'
+           +   '<p class="phantom-desc">예상 참석이 보증인원 이상이라 차액이 없습니다. 청구인원은 실제 참석 쪽을 따라갑니다.</p>'
            + '</section>';
     }
-    /* 조언하지 않는다. 이 숫자는 사용자가 직접 넣은 예상 참석에서 나온 값이므로,
-       무엇을 하라고 훈수하는 대신 근거와 민감도를 밝힌다. */
+    var unitCost = r.adultUnit + r.drinkUnit;
     return '<section class="phantom reveal">'
-         +   '<p class="phantom-k">허수인원 — 안 왔는데 결제하는 자리</p>'
+         +   '<p class="phantom-k">허수인원</p>'
          +   '<p class="warn-figure">' + Fmt.comma(r.phantom) + '명<span class="sep">·</span>' + Fmt.comma(r.phantomCost) + '원</p>'
-         +   '<p class="phantom-desc">보증인원 <b>' + Fmt.comma(r.billed) + '명</b> 중 <b>' + Fmt.comma(r.phantom) + '명</b>분의 식대와 주류가 '
-         +     '아무도 앉지 않는 자리에 청구됩니다. 직접 입력하신 <b>예상 참석 ' + Fmt.comma(r.attendedAdults) + '명</b>을 기준으로 한 값이라, '
-         +     '실제로 더 오면 그만큼 줄고 보증인원을 넘어서면 0이 됩니다.</p>'
-         +   seatsMarkup(r)
+         +   '<p class="phantom-math">청구 ' + Fmt.comma(r.billed) + '명'
+         +     '<span class="op">−</span>예상 참석 ' + Fmt.comma(r.attendedAdults) + '명'
+         +     '<span class="op">=</span><b>' + Fmt.comma(r.phantom) + '명</b>'
+         +     '<span class="op">×</span>' + Fmt.comma(unitCost) + '원</p>'
+         +   '<p class="phantom-desc">예상 참석은 직접 입력하신 값입니다. 식대 ' + Fmt.won(r.adultUnit)
+         +     (r.drinkUnit > 0 ? '과 주류 ' + Fmt.won(r.drinkUnit) : '')
+         +     '이 참석 여부와 무관하게 청구인원 전체에 붙습니다.</p>'
          + '</section>';
   }
 

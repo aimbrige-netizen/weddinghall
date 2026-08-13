@@ -597,40 +597,29 @@ input { caret-color: var(--orange); }
   line-height: 1.15;
 }
 .warn-figure .sep { color: var(--rust-tint); font-weight: 500; margin: 0 8px; }
-.phantom-desc { margin-top: 10px; font-size: 12.5px; line-height: 1.65; color: var(--rust-tint); }
-.phantom-desc b { color: #fff; font-weight: 650; }
 
-.seats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 18px;
-  padding-top: 16px;
+/* 계산식 자체를 보여준다. 결론이 아니라 셈이 근거다. */
+.phantom-math {
+  margin-top: 16px;
+  padding-top: 15px;
   border-top: 1px solid var(--rust-line);
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -.022em;
+  line-height: 1.7;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
 }
-.seat {
-  width: 7px; height: 7px;
-  border-radius: var(--r-pill);
-  background: rgba(255,255,255,.92);
-  flex: none;
-}
-.seat.is-phantom {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.2px rgba(255,255,255,.6);
-  transform: scale(.2);
-  opacity: 0;
-  animation: seatIn 380ms var(--ease) forwards;
-}
-@keyframes seatIn { to { transform: scale(1); opacity: 1; } }
-.seats-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 18px;
-  margin-top: 14px;
-  font-size: 11px;
+.phantom-math .op {
+  display: inline-block;
+  margin: 0 9px;
+  font-weight: 400;
   color: var(--rust-tint);
 }
-.seats-legend span { display: inline-flex; align-items: center; gap: 7px; }
+.phantom-math b { font-weight: 780; }
+
+.phantom-desc { margin-top: 12px; font-size: 12.5px; line-height: 1.65; color: var(--rust-tint); }
+.phantom-desc b { color: #fff; font-weight: 650; }
 
 /* 결과 섹션 */
 .doc-section { margin-top: 26px; }
@@ -969,8 +958,8 @@ input { caret-color: var(--orange); }
   body { background: #fff; }
   .stage { padding: 0; }
   .phantom { background: #fff; color: var(--ink); border: 1.5px solid var(--rust); }
-  .phantom-k, .phantom-desc, .seats-legend { color: var(--rust); }
-  .seat { background: var(--rust); }
-  .seat.is-phantom { background: transparent; box-shadow: inset 0 0 0 1.2px var(--rust); animation: none; opacity: 1; transform: none; }
+  .phantom-k, .phantom-desc { color: var(--rust); }
+  .phantom-math { color: var(--ink); border-top-color: var(--rule); }
+  .phantom-math .op { color: var(--ink-3); }
   .doc { padding: 0; }
 }

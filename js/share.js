@@ -210,54 +210,46 @@ var Share = (function () {
     rule(ctx, y, C.rule, 1);
     y += 50;
 
-    /* 2열 지표 */
+    /* ── 2열 지표 — 결국 얼마 내는가를 나란히 ─────────────────────────── */
     var colW = innerW / 2;
     var col2 = PAD + colW + 22;
+    var rightLabel = r.hasGift ? '순수 부담액' : '청구인원';
+    var rightValue = r.hasGift ? (Fmt.comma(r.netBurden) + '원') : (Fmt.comma(r.billed) + '명');
+    var rightNote  = r.hasGift ? '예상 축의금 차감 후' : (r.separate ? '각보증 기준' : '통합보증 기준');
+
     ctx.fillStyle = C.ink3;
     ctx.font = f(650, 20);
     tracked(ctx, '1인당 실질단가', PAD, y, 1.4);
-    tracked(ctx, '청구 / 실제참석', col2, y, 1.4);
+    tracked(ctx, rightLabel, col2, y, 1.4);
     y += 48;
 
     ctx.fillStyle = C.orangeInk;
     ctx.font = f(780, 46);
     ctx.fillText(Fmt.comma(r.perPerson) + '원', PAD, y);
     ctx.fillStyle = C.ink;
-    ctx.fillText(Fmt.comma(r.billed) + ' / ' + Fmt.comma(r.attendedTotal) + '명', col2, y);
+    ctx.fillText(rightValue, col2, y);
     y += 32;
 
     ctx.fillStyle = C.ink3;
     ctx.font = f(500, 19);
     ctx.fillText('실제 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준', PAD, y);
-    ctx.fillText(r.separate ? '각보증 기준' : '통합보증 기준', col2, y);
-    y += 46;
+    ctx.fillText(rightNote, col2, y);
+    y += 50;
 
-    /* ── 허수 블록 (좌석 행 수에 맞춰 높이 계산) ──────────────────────── */
-    var padIn = 38;
-    var dot = 12, gap = 8;
-    var seatAreaW = innerW - padIn * 2;
-    var perRow = Math.max(1, Math.floor((seatAreaW + gap) / (dot + gap)));
-    var maxRows = 6;
-    var unit = 1;
-    if (r.billed > perRow * maxRows) unit = Math.ceil(r.billed / (perRow * maxRows));
-    var dots = Math.max(0, Math.ceil(r.billed / unit));
-    var phantomDots = Math.min(dots, Math.round(r.phantom / unit));
-    var attendedDots = dots - phantomDots;
-    var rows = Math.max(1, Math.ceil(dots / perRow));
-    var seatsH = rows * (dot + gap) - gap;
-
+    /* ── 허수 블록 ─────────────────────────────────────────────────────
+       좌석 도트를 걷어내고 뺄셈 자체를 싣는다. 결론이 아니라 셈이 근거다. */
+    var padIn = 40;
     var footY = H - 64;
-    var netH = r.hasGift ? 96 : 0;
+    var hasPhantom = r.phantom > 0;
 
     var blockY = y;
-    var blockH = r.phantom > 0 ? (padIn + 26 + 62 + 34 + seatsH + 30 + padIn) : (padIn + 26 + 62 + 24 + padIn);
+    var blockH = padIn + 26 + 70 + (hasPhantom ? 34 + 30 : 30) + 34 + padIn;
 
-    /* 남는 세로 공간은 허수 블록이 흡수한다 — 이 이미지의 주인공이므로 */
-    var slack = Math.max(0, (footY - 78) - (blockY + blockH + 50 + netH));
-    var grow = Math.min(slack * 0.6, 240);
+    /* 남는 세로 공간을 블록이 흡수해 프레임을 채운다 */
+    var slack = Math.max(0, (footY - 78) - (blockY + blockH));
+    var grow = Math.min(slack * 0.62, 250);
     blockH += grow;
-    var bo = grow / 2;                       /* 블록 내부 콘텐츠 아래로 밀기 */
-    var gapAfterBlock = 50 + (slack - grow) * 0.55;
+    var bo = grow / 2;
 
     ctx.fillStyle = C.rust;
     roundRect(ctx, PAD, blockY, innerW, blockH, 22);
@@ -267,12 +259,12 @@ var Share = (function () {
     var by = blockY + padIn + 20 + bo;
     ctx.fillStyle = C.rustTint;
     ctx.font = f(700, 20);
-    tracked(ctx, '허수인원 — 안 왔는데 결제하는 자리', bx, by, 2.2);
-    by += 62;
+    tracked(ctx, '허수인원', bx, by, 2.4);
+    by += 68;
 
-    if (r.phantom > 0) {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = f(800, 62);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = f(800, 62);
+    if (hasPhantom) {
       var pStr = Fmt.comma(r.phantom) + '명';
       ctx.fillText(pStr, bx, by);
       var pw = ctx.measureText(pStr).width;
@@ -282,60 +274,39 @@ var Share = (function () {
       ctx.fillStyle = '#FFFFFF';
       ctx.font = f(800, 62);
       ctx.fillText(Fmt.comma(r.phantomCost) + '원', bx + pw + 52, by);
-
-      /* 좌석 — 찬 점은 실제 참석, 빈 점은 허수 */
-      var seatY = by + 34;
-      for (var i = 0; i < dots; i++) {
-        var cx = bx + (i % perRow) * (dot + gap) + dot / 2;
-        var cy = seatY + Math.floor(i / perRow) * (dot + gap) + dot / 2;
-        ctx.beginPath();
-        ctx.arc(cx, cy, dot / 2, 0, Math.PI * 2);
-        if (i >= attendedDots) {
-          ctx.strokeStyle = 'rgba(255,255,255,.62)';
-          ctx.lineWidth = 1.8;
-          ctx.stroke();
-        } else {
-          ctx.fillStyle = 'rgba(255,255,255,.94)';
-          ctx.fill();
-        }
-      }
-
-      /* 범례 — 글리프 대신 실제 점을 그린다.
-         위쪽 '실제참석'은 아동 포함이라 같은 말을 쓰면 숫자가 어긋나 보인다.
-         좌석도는 성인 기준이므로 '앉는 자리 / 비는 자리'로 부른다. */
-      var ly = seatY + seatsH + 24;
-      var legend1 = '앉는 자리 ' + Fmt.comma(r.attendedAdults);
-      ctx.font = f(500, 18);
-      ctx.beginPath(); ctx.arc(bx + 5, ly - 5, 5, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,.94)'; ctx.fill();
-      ctx.fillStyle = C.rustTint;
-      ctx.fillText(legend1, bx + 20, ly);
-      var lx2 = bx + 20 + ctx.measureText(legend1).width + 34;
-      ctx.beginPath(); ctx.arc(lx2 + 5, ly - 5, 5, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,.62)'; ctx.lineWidth = 1.8; ctx.stroke();
-      ctx.fillStyle = C.rustTint;
-      ctx.fillText('비는 자리 ' + Fmt.comma(r.phantom) + (unit > 1 ? '   (점 1개 = ' + unit + '명)' : ''), lx2 + 20, ly);
     } else {
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = f(800, 54);
-      ctx.fillText('없음', bx, by);
-      ctx.fillStyle = C.rustTint;
-      ctx.font = f(500, 20);
-      ctx.fillText('보증인원을 실제 참석인원이 채웁니다.', bx, by + 34);
+      ctx.fillText('0명', bx, by);
+    }
+    by += 40;
+
+    /* 계산식 한 줄 */
+    var mathY = by + 30;
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.fillRect(bx, by, innerW - padIn * 2, 1);
+
+    ctx.font = f(650, 21);
+    var segs = hasPhantom
+      ? [['청구 ' + Fmt.comma(r.billed) + '명', '#FFFFFF'], ['−', C.rustTint],
+         ['예상 참석 ' + Fmt.comma(r.attendedAdults) + '명', '#FFFFFF'], ['=', C.rustTint],
+         [Fmt.comma(r.phantom) + '명', '#FFFFFF'], ['×', C.rustTint],
+         [Fmt.comma(r.adultUnit + r.drinkUnit) + '원', '#FFFFFF']]
+      : [['청구 ' + Fmt.comma(r.billed) + '명', '#FFFFFF'], ['−', C.rustTint],
+         ['예상 참석 ' + Fmt.comma(r.attendedAdults) + '명', '#FFFFFF'], ['=', C.rustTint],
+         ['0명', '#FFFFFF']];
+    var mx = bx;
+    for (var si = 0; si < segs.length; si++) {
+      ctx.fillStyle = segs[si][1];
+      ctx.font = segs[si][1] === C.rustTint ? f(400, 21) : f(650, 21);
+      ctx.fillText(segs[si][0], mx, mathY);
+      mx += ctx.measureText(segs[si][0]).width + 13;
     }
 
-    y = blockY + blockH + gapAfterBlock;
-
-    /* ── 순수 부담액 ─────────────────────────────────────────────────── */
-    if (r.hasGift) {
-      ctx.fillStyle = C.ink3;
-      ctx.font = f(650, 20);
-      tracked(ctx, '순수 부담액 · 예상 축의금 차감 후', PAD, y, 1.4);
-      y += 52;
-      ctx.fillStyle = r.netBurden < 0 ? C.orangeInk : C.ink;
-      ctx.font = f(800, 52);
-      ctx.fillText(Fmt.comma(r.netBurden) + '원', PAD, y);
-    }
+    ctx.fillStyle = C.rustTint;
+    ctx.font = f(500, 18);
+    ctx.fillText(
+      hasPhantom ? '예상 참석은 직접 입력한 값입니다.' : '예상 참석이 보증인원 이상이라 차액이 없습니다.',
+      bx, mathY + 34
+    );
 
     /* ── 푸터 ────────────────────────────────────────────────────────── */
     rule(ctx, footY - 42, C.rule, 1);
