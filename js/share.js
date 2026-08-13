@@ -89,14 +89,28 @@ var Share = (function () {
   }
 
   /* ── 캔버스 헬퍼 ──────────────────────────────────────────────────────── */
+  /* letterSpacing 미지원 브라우저를 위한 수동 자간.
+     글자를 하나씩 찍으므로 textAlign 을 직접 보정해야 한다.
+     (right/center 인 상태로 그대로 찍으면 각 글자가 자기 x의 왼쪽으로 그려지는데
+      커서는 오른쪽으로 전진해 글자끼리 겹친다 — 'SDING'의 I가 N에 덮이던 버그) */
   function tracked(ctx, text, x, y, spacing) {
-    /* letterSpacing 미지원 브라우저를 위한 수동 자간 */
     if (!spacing) { ctx.fillText(text, x, y); return; }
+
+    var total = 0, i;
+    for (i = 0; i < text.length; i++) total += ctx.measureText(text[i]).width + spacing;
+    total -= spacing;
+
+    var align = ctx.textAlign;
     var cx = x;
-    for (var i = 0; i < text.length; i++) {
+    if (align === 'right') cx = x - total;
+    else if (align === 'center') cx = x - total / 2;
+
+    ctx.textAlign = 'left';
+    for (i = 0; i < text.length; i++) {
       ctx.fillText(text[i], cx, y);
       cx += ctx.measureText(text[i]).width + spacing;
     }
+    ctx.textAlign = align;
   }
 
   function ellipsize(ctx, text, maxW) {
@@ -286,19 +300,21 @@ var Share = (function () {
         }
       }
 
-      /* 범례 — 글리프 대신 실제 점을 그린다 */
+      /* 범례 — 글리프 대신 실제 점을 그린다.
+         위쪽 '실제참석'은 아동 포함이라 같은 말을 쓰면 숫자가 어긋나 보인다.
+         좌석도는 성인 기준이므로 '앉는 자리 / 비는 자리'로 부른다. */
       var ly = seatY + seatsH + 24;
+      var legend1 = '앉는 자리 ' + Fmt.comma(r.attendedAdults);
       ctx.font = f(500, 18);
       ctx.beginPath(); ctx.arc(bx + 5, ly - 5, 5, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,.94)'; ctx.fill();
       ctx.fillStyle = C.rustTint;
-      ctx.fillText('실제 참석 ' + Fmt.comma(r.attendedAdults) + '명', bx + 20, ly);
-      var lw = ctx.measureText('실제 참석 ' + Fmt.comma(r.attendedAdults) + '명').width;
-      var lx2 = bx + 20 + lw + 34;
+      ctx.fillText(legend1, bx + 20, ly);
+      var lx2 = bx + 20 + ctx.measureText(legend1).width + 34;
       ctx.beginPath(); ctx.arc(lx2 + 5, ly - 5, 5, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(255,255,255,.62)'; ctx.lineWidth = 1.8; ctx.stroke();
       ctx.fillStyle = C.rustTint;
-      ctx.fillText('허수 ' + Fmt.comma(r.phantom) + '명' + (unit > 1 ? '  (점 1개 = ' + unit + '명)' : ''), lx2 + 20, ly);
+      ctx.fillText('비는 자리 ' + Fmt.comma(r.phantom) + (unit > 1 ? '   (점 1개 = ' + unit + '명)' : ''), lx2 + 20, ly);
     } else {
       ctx.fillStyle = '#FFFFFF';
       ctx.font = f(800, 54);
@@ -329,7 +345,7 @@ var Share = (function () {
     ctx.textAlign = 'right';
     ctx.fillStyle = C.ink2;
     ctx.font = f(700, 18);
-    tracked(ctx, 'SDING', W - PAD - 32, footY, 3);
+    tracked(ctx, 'SDING', W - PAD, footY, 3);
     ctx.textAlign = 'left';
 
     return cv;
