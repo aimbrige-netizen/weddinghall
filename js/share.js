@@ -235,7 +235,7 @@ var Share = (function () {
 
     ctx.fillStyle = C.ink3;
     ctx.font = f(500, 19);
-    ctx.fillText('예상 참석 ' + Fmt.comma(r.attendedTotal) + '명 기준', PAD, colNoteBase);
+    ctx.fillText('청구인원 ' + Fmt.comma(r.billed) + '명 기준', PAD, colNoteBase);
     ctx.fillText(rightNote, col2, colNoteBase);
 
     /* ── 항목별 내역 — 재발행된 견적서답게 남는 공간은 원장이 채운다 ──── */

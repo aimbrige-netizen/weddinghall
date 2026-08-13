@@ -5,7 +5,8 @@
    청구인원
      · 통합보증 : MAX(총 보증인원, 총 예상참석)
      · 각  보증 : MAX(신랑 보증, 신랑 참석) + MAX(신부 보증, 신부 참석)
-   1인당 실질단가 = 총 예상비용 ÷ 예상 참석인원(성인 + 아동)
+   1인당 실질단가 = 총 예상비용 ÷ 청구인원
+                    ※ 기획서 1-3은 예상 참석으로 나눴으나 2026-08-13 사용자 결정으로 청구인원 기준 변경.
    허수인원       = 청구인원 − 예상 참석인원(성인)
                     ※ 엔진 내부 값. 2026-08-13 사용자 결정으로 UI·공유물에는 노출하지 않는다.
    ------------------------------------------------------------------------
@@ -93,7 +94,7 @@ var Calc = (function () {
     var subtotal   = mealTotal + otherTotal;
     var grandTotal = Math.max(0, subtotal - discount);
 
-    var perPerson = attendedTotal > 0 ? grandTotal / attendedTotal : 0;
+    var perPerson = billed > 0 ? grandTotal / billed : 0;
 
     /* 허수 비용 = 안 왔는데 결제되는 자리의 식대 + 주류 (둘 다 청구인원 기준) */
     var phantomCost = phantom * (adultUnit + drinkUnit);
