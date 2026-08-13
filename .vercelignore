@@ -1,0 +1,13 @@
+# 배포본에서 제외 — 저장소에는 남기되 프로덕션 도메인으로는 노출하지 않는다.
+# (기획 의도 · 디자인 시스템 · 제품 전략 문서)
+견적서.md
+PRODUCT.md
+DESIGN.md
+README.md
+
+# GitHub Pages 전용 파일
+.nojekyll
+
+# 로컬 미리보기 산출물
+_preview.html
+*.log
