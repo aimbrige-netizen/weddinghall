@@ -712,18 +712,6 @@ body[data-view="compare"] .steps { display: none; }
 .actions-row .btn { padding: 0 10px; font-size: 13px; }
 .actions-row .btn .btn-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.cta {
-  margin-top: 26px;
-  padding: 22px 20px;
-  background: var(--ink);
-  border-radius: var(--r-panel);
-  color: var(--onink-1);
-}
-.cta[hidden] { display: none; }
-.cta-title { font-size: 17px; font-weight: 750; letter-spacing: -.035em; line-height: 1.35; }
-.cta-desc { margin-top: 8px; font-size: 12.5px; line-height: 1.65; color: var(--onink-2); }
-.cta .btn { margin-top: 16px; }
-
 .assump {
   margin-top: 24px;
   border-top: 1px solid var(--rule);
@@ -1024,7 +1012,7 @@ body[data-view="compare"] .steps { display: none; }
 
 /* ══ Print — 결과지를 그대로 출력 ═════════════════════════════════════════ */
 @media print {
-  .rail, .dock, .actions, .cta, .toast, .notice, .steps { display: none !important; }
+  .rail, .dock, .actions, .toast, .notice, .steps { display: none !important; }
   body { background: #fff; }
   .stage { padding: 0; }
   .phantom { background: #fff; color: var(--ink); border: 1.5px solid var(--rust); }

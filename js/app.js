@@ -437,17 +437,6 @@
          + '</section>';
   }
 
-  function ctaMarkup() {
-    if (!CONFIG.cta.enabled || !CONFIG.cta.url) return '';
-    return '<aside class="cta reveal">'
-         +   '<p class="cta-title">' + esc(CONFIG.cta.title) + '</p>'
-         +   '<p class="cta-desc">' + esc(CONFIG.cta.desc) + '</p>'
-         +   '<a class="btn btn-primary btn-block" href="' + esc(CONFIG.cta.url) + '" target="_blank" rel="noopener noreferrer">'
-         +     '<span class="btn-label">' + esc(CONFIG.cta.buttonText) + '</span>'
-         +     '<span class="btn-orb" aria-hidden="true">' + icon('i-arrow-right') + '</span></a>'
-         + '</aside>';
-  }
-
   function assumptionsMarkup(r) {
     return '<details class="assump reveal">'
          +   '<summary>이 계산이 세운 가정 보기</summary>'
@@ -510,7 +499,6 @@
       +       icon('i-plus') + '<span class="btn-label">다른 홀도 계산해서 비교하기</span></button>'
       +   '</div>'
 
-      +   ctaMarkup()
       +   assumptionsMarkup(r)
       + '</div>';
 

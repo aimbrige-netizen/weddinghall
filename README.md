@@ -86,7 +86,7 @@ powershell -NoProfile -Command "$l=New-Object System.Net.HttpListener;$l.Prefixe
 ```
 index.html          마크업 · 아이콘 스프라이트 · 방향 계약 주석
 css/styles.css      전체 스타일 (토큰 → 컴포넌트 → 반응형 → 인쇄)
-js/config.js        브랜드 · CTA · 예시값 · 필드 정의 · 로고 패스
+js/config.js        브랜드 · 예시값 · 필드 정의 · 로고 패스
 js/format.js        숫자 포맷 · 입력 마스킹(커서 보존)
 js/calc.js          계산 엔진 (순수 함수, DOM 무의존)
 js/store.js         상태 · localStorage · 비교함
@@ -103,13 +103,12 @@ DESIGN.md           시각 시스템 (토큰 · 타이포 · 모션 규칙)
 전부 [`js/config.js`](js/config.js) 한 곳에서 바꿉니다.
 
 ```js
-CONFIG.cta.url     = 'https://...'; // 실제 Sding 상담/랜딩 주소
-CONFIG.cta.enabled = true;          // 위 주소를 넣은 뒤 켜면 결과 하단에 리드 CTA 노출
 CONFIG.MAX_COMPARE = 3;             // 비교함 개수
 CONFIG.example     = { ... };       // 프리필 예시값
+CONFIG.helps       = { ... };       // 토글 도움말 문구
 ```
 
-리드 CTA는 **기본값이 꺼짐**입니다. `url` 이 비어 있으면 `enabled` 와 무관하게 렌더되지 않으므로, 잘못된 주소로 링크가 나가는 일은 없습니다.
+이 도구는 **순수 유틸리티**입니다. 결과 화면에 상담 유도 CTA를 넣지 않습니다 (기획서 2-1 / 2-5 결정 사항).
 
 ## 브라우저 지원
 
