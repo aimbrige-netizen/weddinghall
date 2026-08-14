@@ -34,7 +34,8 @@ var Share = (function () {
     L.push(name);
     L.push('');
     L.push('총 예상비용    ' + Fmt.won(r.grandTotal));
-    L.push('1인당 실질단가  ' + Fmt.won(r.perPerson));
+    L.push('1인당 실질단가  ' + Fmt.won(r.perPerson)
+      + ' (' + (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' ' + Fmt.comma(r.perPersonCount) + '명 기준)');
     L.push('');
     L.push('· 청구인원 ' + Fmt.people(r.billed) + ' / 예상참석 ' + Fmt.people(r.attendedTotal));
     L.push('· 보증방식 ' + (r.separate ? '각보증' : '통합보증'));
@@ -60,6 +61,116 @@ var Share = (function () {
     L.push('※ 참고용 계산입니다. 최종 금액과 조건은 계약서 원문으로 확인하세요.');
     try { L.push(window.location.href.split('#')[0]); } catch (e) { /* noop */ }
     return L.join('\n');
+  }
+
+  /* ── 링크로 내보내기 ──────────────────────────────────────────────────────
+     비교함을 주소(hash)에 통째로 실어 사용자가 자기 카톡·북마크에 보관하게 한다.
+     서버가 없으므로 링크 자체가 저장소다. 기기가 바뀌어도, 사파리가 7일 뒤
+     저장소를 비워도, 도메인이 바뀌어도 링크만 있으면 복원된다.
+
+     인코딩: {v, h:[[값1, 값2, ...], ...]} → JSON → UTF-8 → base64url
+     값은 CONFIG.shareFieldOrder 순서대로만 싣고 키 이름은 싣지 않는다(용량). */
+
+  function b64urlEncode(str) {
+    var bin = '', bytes, i;
+    if (window.TextEncoder) {
+      bytes = new TextEncoder().encode(str);
+      for (i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    } else {
+      bin = unescape(encodeURIComponent(str));
+    }
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function b64urlDecode(s) {
+    var t = s.replace(/-/g, '+').replace(/_/g, '/');
+    while (t.length % 4) t += '=';
+    var bin = atob(t);
+    if (window.TextDecoder) {
+      var bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    }
+    return decodeURIComponent(escape(bin));
+  }
+
+  function packState(state) {
+    var order = CONFIG.shareFieldOrder;
+    var row = [];
+    for (var i = 0; i < order.length; i++) {
+      var key = order[i];
+      var def = CONFIG.fields[key];
+      var v = state[key];
+      if (def && def.type === 'enum') {
+        var map = CONFIG.enumCodes[key] || {};
+        row.push(map[v] === undefined ? 0 : map[v]);
+      } else if (def && def.type === 'number') {
+        row.push(v === '' || v === undefined || v === null ? 0 : Fmt.int(v));
+      } else {
+        row.push(v === undefined || v === null ? '' : String(v));
+      }
+    }
+    /* 뒤쪽 빈 값은 잘라내 링크를 줄인다 (복원 시 기본값으로 채움) */
+    while (row.length && (row[row.length - 1] === 0 || row[row.length - 1] === '')) row.pop();
+    return row;
+  }
+
+  function unpackState(row) {
+    var order = CONFIG.shareFieldOrder;
+    var state = {};
+    for (var i = 0; i < order.length; i++) {
+      var key = order[i];
+      var def = CONFIG.fields[key];
+      var v = (row && i < row.length) ? row[i] : undefined;
+      if (def && def.type === 'enum') {
+        var map = CONFIG.enumCodes[key] || {};
+        var found = def.def;
+        for (var name in map) {
+          if (Object.prototype.hasOwnProperty.call(map, name) && map[name] === v) { found = name; break; }
+        }
+        state[key] = found;
+      } else if (def && def.type === 'number') {
+        state[key] = (v === undefined || v === 0) ? '' : Fmt.int(v);
+      } else {
+        state[key] = v === undefined ? '' : String(v);
+      }
+    }
+    return state;
+  }
+
+  /* 비교함 → 공유 가능한 전체 주소 */
+  function buildCompareLink(list) {
+    var payload = { v: CONFIG.SHARE_VERSION, h: [] };
+    for (var i = 0; i < list.length; i++) {
+      payload.h.push([String(list[i].name || '')].concat(packState(list[i].state)));
+    }
+    var base;
+    try { base = window.location.href.split('#')[0]; } catch (e) { base = ''; }
+    return base + '#h=' + b64urlEncode(JSON.stringify(payload));
+  }
+
+  /* 주소 → 비교함 배열 (실패하면 null) */
+  function readCompareLink(hash) {
+    if (!hash) return null;
+    var m = String(hash).match(/[#&]h=([A-Za-z0-9\-_]+)/);
+    if (!m) return null;
+    try {
+      var payload = JSON.parse(b64urlDecode(m[1]));
+      if (!payload || Object.prototype.toString.call(payload.h) !== '[object Array]') return null;
+      var out = [];
+      for (var i = 0; i < payload.h.length && out.length < CONFIG.MAX_COMPARE; i++) {
+        var row = payload.h[i];
+        if (Object.prototype.toString.call(row) !== '[object Array]') continue;
+        out.push({
+          id: 'lnk' + i + '_' + Math.floor(Math.random() * 100000).toString(36),
+          name: String(row[0] || '이름 없는 홀').slice(0, 40),
+          state: unpackState(row.slice(1))
+        });
+      }
+      return out.length ? out : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   /* ── 클립보드 ─────────────────────────────────────────────────────────── */
@@ -235,7 +346,7 @@ var Share = (function () {
 
     ctx.fillStyle = C.ink3;
     ctx.font = f(500, 19);
-    ctx.fillText('청구인원 ' + Fmt.comma(r.billed) + '명 기준', PAD, colNoteBase);
+    ctx.fillText((r.perBasis === 'attended' ? '예상 참석 ' : '청구인원 ') + Fmt.comma(r.perPersonCount) + '명 기준', PAD, colNoteBase);
     ctx.fillText(rightNote, col2, colNoteBase);
 
     /* ── 항목별 내역 — 재발행된 견적서답게 남는 공간은 원장이 채운다 ──── */
@@ -365,6 +476,8 @@ var Share = (function () {
   return {
     buildText: buildText,
     copyText: copyText,
+    buildCompareLink: buildCompareLink,
+    readCompareLink: readCompareLink,
     saveImage: saveImage,
     shareResult: shareResult,
     renderCanvas: renderCanvas

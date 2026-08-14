@@ -34,6 +34,7 @@ var CONFIG = {
     brideGuarantee:   { type: 'number', step: 1 },
     groomExpected:    { type: 'number', step: 1 },
     brideExpected:    { type: 'number', step: 1 },
+    perPersonBasis:   { type: 'enum', step: 1, def: 'billed' },
 
     adultMealPrice:   { type: 'number', step: 2 },
     mealVatMode:      { type: 'enum', step: 2, def: 'excluded' },
@@ -73,8 +74,32 @@ var CONFIG = {
   /* 2·3번째 홀 입력 시 이어받는 공통값 (기획서 2-5) ------------------------ */
   carryOverFields: [
     'guaranteeMode', 'groomExpected', 'brideExpected',
-    'childCount', 'giftPerPerson', 'mealVatMode', 'otherVatMode'
+    'childCount', 'giftPerPerson', 'mealVatMode', 'otherVatMode', 'perPersonBasis'
   ],
+
+  /* 링크 공유용 필드 순서 -------------------------------------------------
+     주소에 값만 순서대로 싣기 위한 고정 배열입니다.
+     ★ 순서를 바꾸거나 중간에 끼워넣으면 기존 링크가 깨집니다.
+       필드를 추가할 때는 반드시 배열 끝에만 붙이고 SHARE_VERSION을 올리세요. */
+  SHARE_VERSION: 1,
+  shareFieldOrder: [
+    'guaranteeMode', 'unifiedGuarantee', 'groomGuarantee', 'brideGuarantee',
+    'groomExpected', 'brideExpected', 'perPersonBasis',
+    'adultMealPrice', 'mealVatMode', 'childMealPrice', 'childCount',
+    'venueFee', 'flowerFee', 'drinkPerPerson', 'etcFee',
+    'optionMode', 'optionTotal',
+    'optMc', 'optSong', 'optSnap', 'optVideo', 'optMakeup', 'optCake',
+    'otherVatMode', 'discount', 'giftPerPerson', 'hallName'
+  ],
+
+  /* enum 값을 링크에서 한 글자로 줄이기 위한 코드표 ------------------------ */
+  enumCodes: {
+    guaranteeMode:  { unified: 0, separate: 1 },
+    mealVatMode:    { included: 0, excluded: 1 },
+    otherVatMode:   { included: 0, excluded: 1 },
+    optionMode:     { total: 0, detail: 1 },
+    perPersonBasis: { billed: 0, attended: 1 }
+  },
 
   /* 예시 프리필 ----------------------------------------------------------- */
   example: {
@@ -84,6 +109,7 @@ var CONFIG = {
     brideGuarantee: 120,
     groomExpected: 110,
     brideExpected: 90,
+    perPersonBasis: 'billed',
 
     adultMealPrice: 79000,
     mealVatMode: 'excluded',
@@ -115,6 +141,10 @@ var CONFIG = {
     guaranteeMode: {
       unified:  '양가 구분 없이 하나의 보증인원으로 계약한 경우입니다. 청구인원 = MAX(총 보증인원, 총 참석인원).',
       separate: '신랑측·신부측 보증인원을 따로 잡은 경우입니다. 한쪽이 미달이면 그쪽만 손해가 나므로 청구인원이 더 커질 수 있습니다.'
+    },
+    perPersonBasis: {
+      billed:   '실제로 <b>결제하는 인원</b>으로 나눕니다. 계약서 기준 그대로라 홀끼리 비교할 때 기준이 흔들리지 않습니다.',
+      attended: '실제로 <b>올 사람 수</b>로 나눕니다. 하객 한 명 대접에 든 돈이 나오지만, 예상 참석을 넣어야 계산됩니다.'
     },
     mealVatMode: {
       included: '견적서 식대 단가에 부가세가 이미 들어있는 경우입니다.',

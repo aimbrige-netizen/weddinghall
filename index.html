@@ -196,6 +196,15 @@
               </label>
             </div>
 
+            <div class="field">
+              <span class="field-label">1인당 단가 기준</span>
+              <div class="seg" role="group" aria-label="1인당 단가 기준" data-toggle="perPersonBasis">
+                <button type="button" class="seg-btn" data-value="billed">청구인원</button>
+                <button type="button" class="seg-btn" data-value="attended">예상 참석</button>
+              </div>
+              <span class="field-help" data-help="perPersonBasis"></span>
+            </div>
+
             <div class="ledger" data-live-box="step1"></div>
           </section>
 
@@ -409,6 +418,10 @@
   <span class="toast-msg" id="toastMsg"></span>
   <button type="button" class="toast-undo" id="toastUndo" hidden>되돌리기</button>
 </div>
+
+<!-- Vercel Web Analytics — 쿠키 없음, 방문/이탈만 집계하고 입력값은 보내지 않습니다.
+     Vercel 대시보드에서 Analytics를 켜야 동작하며, 그 외 환경에서는 404로 조용히 무시됩니다. -->
+<script defer src="/_vercel/insights/script.js"></script>
 
 <script src="js/config.js"></script>
 <script src="js/format.js"></script>

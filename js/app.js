@@ -195,13 +195,19 @@
     /* Step 1 */
     var box1 = $('[data-live-box="step1"]');
     if (box1) {
+      /* 두 기준을 나란히 보여줘야 어느 쪽을 고를지 판단할 수 있다 */
       box1.innerHTML = ledger('인원 확인', r.separate ? '각보증' : '통합보증', [
         { label: '청구인원', value: Fmt.people(r.billed),
           memo: r.separate
             ? '양가 각각 MAX(보증, 참석)의 합'
             : 'MAX(총 보증 ' + Fmt.comma(r.guaranteeTotal) + ', 총 참석 ' + Fmt.comma(r.attendedAdults) + ')' },
-        { label: '예상 참석(성인)', value: Fmt.people(r.attendedAdults) }
-      ]);
+        { label: '예상 참석', value: Fmt.people(r.attendedTotal),
+          memo: r.childCount > 0 ? '성인 ' + Fmt.comma(r.attendedAdults) + ' + 아동 ' + Fmt.comma(r.childCount) : '성인 기준' },
+        { label: '1인당 · 청구인원 기준', value: Fmt.won(r.perPersonBilled), type: 'sub' },
+        { label: '1인당 · 예상 참석 기준', value: r.attendedTotal > 0 ? Fmt.won(r.perPersonAttended) : '참석 입력 필요', type: 'sub' }
+      ], r.perBasisFellBack
+          ? '예상 참석이 비어 있어 <b>청구인원 기준</b>으로 계산했습니다.'
+          : '결과에는 <b>' + (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' 기준</b>이 쓰입니다.');
     }
 
     /* Step 2 */
@@ -364,7 +370,10 @@
          +   '<ul class="assump-body">'
          +     '<li>청구인원은 ' + (r.separate ? '양가 각각 MAX(보증, 참석)을 더해' : 'MAX(총 보증, 총 참석)으로') + ' 구했습니다.</li>'
          +     '<li>식대와 주류·음료는 예상 참석이 아니라 <b>청구인원</b>에 곱했습니다.</li>'
-         +     '<li>1인당 실질단가는 총 예상비용을 <b>청구인원 ' + Fmt.comma(r.billed) + '명</b>으로 나눈 값입니다.</li>'
+         +     '<li>1인당 실질단가는 총 예상비용을 <b>'
+         +       (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' ' + Fmt.comma(r.perPersonCount) + '명</b>으로 나눈 값입니다.'
+         +       (r.perBasisFellBack ? ' (예상 참석을 넣지 않아 청구인원으로 계산했습니다)' : '')
+         +       ' 기준은 1번 섹션에서 바꿀 수 있습니다.</li>'
          +     '<li>아동 식대는 청구인원과 별개로 추가 합산했습니다.</li>'
          +     (r.hasGift ? '<li>예상 축의금은 예상 참석 성인 ' + Fmt.comma(r.attendedAdults) + '명 기준입니다.</li>' : '')
          +     '<li>부가세율은 10% 고정입니다.</li>'
@@ -376,6 +385,14 @@
     var s = Store.all();
     var r = Calc.run(s);
     var name = (s.hallName || '').trim() || '이름 없는 웨딩홀';
+
+    /* 고른 기준을 먼저 쓰고, 두 기준의 값이 다를 때만 반대쪽 값을 덧붙인다 */
+    var perNote = (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' '
+                + Fmt.comma(r.perPersonCount) + '명 기준';
+    if (r.attendedTotal > 0 && r.billed !== r.attendedTotal) {
+      perNote += '<br>' + (r.perBasis === 'attended' ? '청구인원' : '예상 참석') + ' 기준이면 '
+               + Fmt.won(r.perBasis === 'attended' ? r.perPersonBilled : r.perPersonAttended);
+    }
 
     el.resultRoot.innerHTML =
         '<div class="doc">'
@@ -395,7 +412,7 @@
       +     '<div class="doc-metric is-accent">'
       +       '<span class="doc-metric-k">1인당 실질단가</span>'
       +       '<strong class="doc-metric-v">' + Fmt.won(r.perPerson) + '</strong>'
-      +       '<span class="doc-metric-note">청구인원 ' + Fmt.comma(r.billed) + '명 기준</span>'
+      +       '<span class="doc-metric-note">' + perNote + '</span>'
       +     '</div>'
       +     '<div class="doc-metric">'
       +       '<span class="doc-metric-k">청구인원</span>'
@@ -521,7 +538,13 @@
       +     '</p>'
       +   '</div>'
       +   '<div class="swipe">' + cards + '</div>'
+      +   '<div class="compare-note">'
+      +     '<b>비교함은 이 브라우저에만 저장됩니다.</b> 기기를 바꾸거나 한동안 안 들어오면 사라질 수 있어요. '
+      +     '아래 링크를 복사해 두면 어디서든 그대로 열립니다.'
+      +   '</div>'
       +   '<div class="compare-actions">'
+      +     '<button type="button" class="btn btn-solid btn-block" data-act="copyLink">'
+      +       icon('i-share') + '<span class="btn-label">비교함 링크 복사</span></button>'
       +     '<button type="button" class="btn btn-outline btn-block" data-act="copyCompare">'
       +       icon('i-copy') + '<span class="btn-label">비교표 복사</span></button>'
       +     '<button type="button" class="btn btn-outline btn-block" data-act="clearCompare">'
@@ -625,6 +648,16 @@
         .catch(function () { toast('복사에 실패했습니다'); });
     },
 
+    /* 비교함을 통째로 주소에 실어 복사한다. 링크 자체가 백업이다. */
+    copyLink: function () {
+      var list = Store.compareList();
+      if (!list.length) { toast('비교함이 비어 있습니다'); return; }
+      var link = Share.buildCompareLink(list);
+      Share.copyText(link)
+        .then(function () { toast('링크를 복사했습니다. 나에게 보내두세요'); })
+        .catch(function () { toast('복사에 실패했습니다'); });
+    },
+
     nextHall: function () {
       Store.startNextHall();
       writeInputs();
@@ -723,12 +756,36 @@
     if (reason === 'field') renderLive();
   });
 
+  /* 공유 링크로 들어온 경우: 비교함을 복원하고 주소는 깨끗하게 되돌린다.
+     되돌리기를 붙여 기존 비교함을 실수로 덮어써도 복구할 수 있게 한다. */
+  var imported = null;
+  try { imported = Share.readCompareLink(window.location.hash); } catch (e) { imported = null; }
+
+  if (imported && imported.length) {
+    var before = Store.compareList().slice();
+    Store.compareRestore(imported);
+    try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) { /* noop */ }
+  }
+
   writeInputs();
   renderLive();
   renderBadge();
   renderDockWizard();
-  setView('wizard', false);
-  try { history.replaceState({ view: 'wizard' }, ''); } catch (e) { /* noop */ }
+  setView(imported && imported.length ? 'compare' : 'wizard', false);
+  try { history.replaceState({ view: view }, ''); } catch (e) { /* noop */ }
+
+  if (imported && imported.length) {
+    var restoreTo = before;
+    setTimeout(function () {
+      toast('링크에서 ' + imported.length + '개를 불러왔습니다', {
+        undo: function () {
+          Store.compareRestore(restoreTo);
+          renderCompare();
+          toast('되돌렸습니다');
+        }
+      });
+    }, 400);
+  }
 
   if (!Store.storageAvailable) {
     setTimeout(function () { toast('이 브라우저에서는 입력값이 저장되지 않습니다'); }, 900);

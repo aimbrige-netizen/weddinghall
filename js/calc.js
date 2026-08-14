@@ -5,8 +5,9 @@
    청구인원
      · 통합보증 : MAX(총 보증인원, 총 예상참석)
      · 각  보증 : MAX(신랑 보증, 신랑 참석) + MAX(신부 보증, 신부 참석)
-   1인당 실질단가 = 총 예상비용 ÷ 청구인원
-                    ※ 기획서 1-3은 예상 참석으로 나눴으나 2026-08-13 사용자 결정으로 청구인원 기준 변경.
+   1인당 실질단가 = 총 예상비용 ÷ (청구인원 | 예상 참석인원)
+                    ※ 사용자가 perPersonBasis 로 고릅니다. 기본값은 청구인원.
+                      예상 참석 기준을 골랐는데 참석 입력이 비어 있으면 청구인원으로 자동 대체합니다.
    허수인원       = 청구인원 − 예상 참석인원(성인)
                     ※ 엔진 내부 값. 2026-08-13 사용자 결정으로 UI·공유물에는 노출하지 않는다.
    ------------------------------------------------------------------------
@@ -94,7 +95,17 @@ var Calc = (function () {
     var subtotal   = mealTotal + otherTotal;
     var grandTotal = Math.max(0, subtotal - discount);
 
-    var perPerson = billed > 0 ? grandTotal / billed : 0;
+    /* 1인당 실질단가 — 두 기준을 다 구해두고 선택값에 따라 대표값을 정한다.
+       (두 값을 나란히 보여줘야 사용자가 차이를 확인할 수 있다) */
+    var perPersonBilled   = billed > 0 ? grandTotal / billed : 0;
+    var perPersonAttended = attendedTotal > 0 ? grandTotal / attendedTotal : 0;
+
+    var wantAttended = s.perPersonBasis === 'attended';
+    var perBasis = (wantAttended && attendedTotal > 0) ? 'attended' : 'billed';
+    var perBasisFellBack = wantAttended && attendedTotal <= 0;
+
+    var perPerson = perBasis === 'attended' ? perPersonAttended : perPersonBilled;
+    var perPersonCount = perBasis === 'attended' ? attendedTotal : billed;
 
     /* 허수 비용 = 안 왔는데 결제되는 자리의 식대 + 주류 (둘 다 청구인원 기준) */
     var phantomCost = phantom * (adultUnit + drinkUnit);
@@ -178,6 +189,11 @@ var Calc = (function () {
       subtotal: subtotal,
       grandTotal: grandTotal,
       perPerson: perPerson,
+      perPersonBilled: perPersonBilled,
+      perPersonAttended: perPersonAttended,
+      perPersonCount: perPersonCount,
+      perBasis: perBasis,
+      perBasisFellBack: perBasisFellBack,
       phantomCost: phantomCost,
 
       /* 축의금 */
