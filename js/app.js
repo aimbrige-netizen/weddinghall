@@ -107,6 +107,9 @@
       } else {
         input.value = val === undefined || val === null ? '' : val;
       }
+      /* 이전 홀에서 물려받은 값은 사용자가 넣은 값과 구분해서 보여준다 */
+      var wrap = input.closest ? input.closest('.input-wrap') : null;
+      if (wrap) wrap.classList.toggle('is-carried', Store.isCarried(key));
     });
 
     $$('[data-toggle]').forEach(function (group) {
@@ -152,6 +155,10 @@
     } else {
       Store.set(key, input.value);
     }
+
+    /* 사용자가 손댄 순간 '이전 홀' 표시를 벗긴다 */
+    var wrap = input.closest ? input.closest('.input-wrap') : null;
+    if (wrap && wrap.classList.contains('is-carried')) wrap.classList.remove('is-carried');
   });
 
   /* 세그먼트 토글 */
@@ -203,11 +210,9 @@
             : 'MAX(총 보증 ' + Fmt.comma(r.guaranteeTotal) + ', 총 참석 ' + Fmt.comma(r.attendedAdults) + ')' },
         { label: '예상 참석', value: Fmt.people(r.attendedTotal),
           memo: r.childCount > 0 ? '성인 ' + Fmt.comma(r.attendedAdults) + ' + 아동 ' + Fmt.comma(r.childCount) : '성인 기준' },
-        { label: '1인당 · 청구인원 기준', value: Fmt.won(r.perPersonBilled), type: 'sub' },
-        { label: '1인당 · 예상 참석 기준', value: r.attendedTotal > 0 ? Fmt.won(r.perPersonAttended) : '참석 입력 필요', type: 'sub' }
-      ], r.perBasisFellBack
-          ? '예상 참석이 비어 있어 <b>청구인원 기준</b>으로 계산했습니다.'
-          : '결과에는 <b>' + (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' 기준</b>이 쓰입니다.');
+        { label: '1인당 · 청구인원 기준', value: r.billed > 0 ? Fmt.won(r.perPersonBilled) : '보증인원 입력 필요', type: 'sub' },
+        { label: '1인당 · 예상 참석 기준', value: r.attendedTotal > 0 ? Fmt.won(r.perPersonAttended) : '참석인원 입력 필요', type: 'sub' }
+      ], '결과에는 <b>' + (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' 기준</b>이 쓰입니다.');
     }
 
     /* Step 2 */
@@ -270,9 +275,23 @@
       box5.innerHTML = ledger('최종 합계', r.vatAdded > 0 ? ('별도 부가세 ' + Fmt.won(r.vatAdded) + ' 포함') : 'VAT 포함가 기준', rows5);
     }
 
-    /* 예시 안내 */
-    if (Store.isExampleData()) el.notice.removeAttribute('hidden');
-    else el.notice.setAttribute('hidden', '');
+    /* 상단 안내 — 예시값 상태 / 이전 홀에서 값을 물려받은 상태 */
+    var carried = Store.carriedCount();
+    if (Store.isExampleData()) {
+      el.notice.removeAttribute('hidden');
+      el.notice.className = 'notice';
+      $('.notice-text', el.notice).innerHTML =
+        '<b>금액 칸은 예시입니다.</b> 받아온 견적서 숫자로 덮어쓰세요. 참석인원은 비어 있습니다.';
+      $('#btnClearAll').textContent = '전부 비우기';
+    } else if (carried > 0) {
+      el.notice.removeAttribute('hidden');
+      el.notice.className = 'notice is-carried';
+      $('.notice-text', el.notice).innerHTML =
+        '<b>' + carried + '개 칸을 이전 홀에서 가져왔습니다.</b> 표시된 칸을 확인하고 다르면 고치세요.';
+      $('#btnClearAll').textContent = '가져온 값 비우기';
+    } else {
+      el.notice.setAttribute('hidden', '');
+    }
 
     return r;
   }
@@ -372,7 +391,6 @@
          +     '<li>식대와 주류·음료는 예상 참석이 아니라 <b>청구인원</b>에 곱했습니다.</li>'
          +     '<li>1인당 실질단가는 총 예상비용을 <b>'
          +       (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' ' + Fmt.comma(r.perPersonCount) + '명</b>으로 나눈 값입니다.'
-         +       (r.perBasisFellBack ? ' (예상 참석을 넣지 않아 청구인원으로 계산했습니다)' : '')
          +       ' 기준은 1번 섹션에서 바꿀 수 있습니다.</li>'
          +     '<li>아동 식대는 청구인원과 별개로 추가 합산했습니다.</li>'
          +     (r.hasGift ? '<li>예상 축의금은 예상 참석 성인 ' + Fmt.comma(r.attendedAdults) + '명 기준입니다.</li>' : '')
@@ -386,12 +404,17 @@
     var r = Calc.run(s);
     var name = (s.hallName || '').trim() || '이름 없는 웨딩홀';
 
-    /* 고른 기준을 먼저 쓰고, 두 기준의 값이 다를 때만 반대쪽 값을 덧붙인다 */
-    var perNote = (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' '
-                + Fmt.comma(r.perPersonCount) + '명 기준';
-    if (r.attendedTotal > 0 && r.billed !== r.attendedTotal) {
-      perNote += '<br>' + (r.perBasis === 'attended' ? '청구인원' : '예상 참석') + ' 기준이면 '
-               + Fmt.won(r.perBasis === 'attended' ? r.perPersonBilled : r.perPersonAttended);
+    /* 고른 기준을 그대로 쓴다. 나눌 인원이 비었으면 대신 계산하지 않고 입력을 요청한다. */
+    var perNote;
+    if (r.perPersonMissing) {
+      perNote = (r.perBasis === 'attended' ? '예상 참석인원' : '보증인원') + '을 입력하면 계산됩니다';
+    } else {
+      perNote = (r.perBasis === 'attended' ? '예상 참석' : '청구인원') + ' '
+              + Fmt.comma(r.perPersonCount) + '명 기준';
+      if (r.attendedTotal > 0 && r.billed !== r.attendedTotal) {
+        perNote += '<br>' + (r.perBasis === 'attended' ? '청구인원' : '예상 참석') + ' 기준이면 '
+                 + Fmt.won(r.perBasis === 'attended' ? r.perPersonBilled : r.perPersonAttended);
+      }
     }
 
     el.resultRoot.innerHTML =
@@ -411,7 +434,7 @@
       +   '<div class="doc-metrics reveal">'
       +     '<div class="doc-metric is-accent">'
       +       '<span class="doc-metric-k">1인당 실질단가</span>'
-      +       '<strong class="doc-metric-v">' + Fmt.won(r.perPerson) + '</strong>'
+      +       '<strong class="doc-metric-v">' + (r.perPersonMissing ? '—' : Fmt.won(r.perPerson)) + '</strong>'
       +       '<span class="doc-metric-note">' + perNote + '</span>'
       +     '</div>'
       +     '<div class="doc-metric">'
@@ -663,7 +686,8 @@
       writeInputs();
       renderLive();
       setView('wizard');
-      toast('하객·축의금 정보를 이어받았습니다');
+      var n = Store.carriedCount();
+      toast(n > 0 ? n + '개 칸을 이전 홀에서 가져왔습니다' : '새 홀 입력을 시작합니다');
     },
 
     backToResult: function () { setView(viewBeforeCompare || 'wizard'); },
@@ -727,6 +751,21 @@
     var s = Store.all();
     for (var k in s) if (Object.prototype.hasOwnProperty.call(s, k)) snapshot[k] = s[k];
     var wasExample = Store.isExampleData();
+    var wasCarried = Store.carriedCount() > 0;
+
+    /* 물려받은 값만 지우는 경우와 전부 비우는 경우를 구분한다 */
+    if (!wasExample && wasCarried) {
+      CONFIG.carryOverFields.forEach(function (key) {
+        if (Store.isCarried(key)) Store.set(key, '', { silent: true });
+      });
+      Store.clearCarried();
+      writeInputs();
+      renderLive();
+      toast('가져온 값을 비웠습니다', {
+        undo: function () { Store.loadFrom(snapshot); writeInputs(); renderLive(); toast('되돌렸습니다'); }
+      });
+      return;
+    }
 
     Store.clearAll();
     writeInputs();

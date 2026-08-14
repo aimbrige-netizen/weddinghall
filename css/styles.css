@@ -212,6 +212,7 @@ input { caret-color: var(--orange); }
   border-bottom: 1px solid var(--rule);
 }
 .notice[hidden] { display: none; }
+.notice.is-carried { border-bottom-color: var(--orange-ink); }
 .notice-text { flex: 1; font-size: 12.5px; line-height: 1.5; color: var(--ink-3); }
 .notice-text b { color: var(--ink-2); }
 .mini-btn {
@@ -295,6 +296,23 @@ input { caret-color: var(--orange); }
   border-color: var(--orange);
   box-shadow: 0 0 0 3px rgba(255,84,22,.16);
 }
+/* 이전 홀에서 물려받은 값 — 사용자가 넣은 값과 눈으로 구분되어야 한다 */
+.input-wrap.is-carried {
+  border-color: var(--orange-line, #E8C9B8);
+  border-style: dashed;
+  background: var(--orange-wash);
+}
+.input-wrap.is-carried:focus-within { border-style: solid; background: var(--sheet); }
+.input-wrap.is-carried::after {
+  content: "이전 홀";
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--orange-ink);
+  white-space: nowrap;
+}
+.input-wrap.is-carried:focus-within::after { display: none; }
 .input-wrap input {
   flex: 1;
   width: 100%;

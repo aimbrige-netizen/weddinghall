@@ -101,20 +101,23 @@ var CONFIG = {
     perPersonBasis: { billed: 0, attended: 1 }
   },
 
-  /* 예시 프리필 ----------------------------------------------------------- */
+  /* 예시 프리필 -----------------------------------------------------------
+     ★ 예상 참석인원(groomExpected / brideExpected / childCount)은 절대 채우지 않는다.
+       앱이 숫자를 넣어두면 사용자가 자기가 넣지도 않은 인원으로 계산된 결과를 보게 된다.
+       이 값들은 오직 사용자만 정한다. (2026-08-13 사용자 결정) */
   example: {
     guaranteeMode: 'unified',
     unifiedGuarantee: 250,
     groomGuarantee: 130,
     brideGuarantee: 120,
-    groomExpected: 110,
-    brideExpected: 90,
+    groomExpected: '',
+    brideExpected: '',
     perPersonBasis: 'billed',
 
     adultMealPrice: 79000,
     mealVatMode: 'excluded',
     childMealPrice: 45000,
-    childCount: 5,
+    childCount: '',
 
     venueFee: 3000000,
     flowerFee: 2500000,

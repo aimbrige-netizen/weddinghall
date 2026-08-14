@@ -12,6 +12,7 @@ var Store = (function () {
   var compare = [];
   var step = 1;
   var isExample = true;      /* 예시값 그대로인지 (한 글자라도 고치면 false) */
+  var carriedKeys = {};      /* 이전 홀에서 이어받은 필드 (사용자가 고치면 해제) */
   var listeners = [];
 
   /* ── localStorage 안전 래퍼 ────────────────────────────────────────────── */
@@ -149,16 +150,26 @@ var Store = (function () {
     state[key] = value;
     if (!(opts && opts.silent)) {
       isExample = false;
+      if (carriedKeys[key]) delete carriedKeys[key];   /* 사용자가 손댔으면 더 이상 물려받은 값이 아니다 */
       persist();
       emit('field');
     }
   }
+
+  function isCarried(key) { return !!carriedKeys[key]; }
+  function carriedCount() {
+    var n = 0;
+    for (var k in carriedKeys) if (Object.prototype.hasOwnProperty.call(carriedKeys, k)) n++;
+    return n;
+  }
+  function clearCarried() { carriedKeys = {}; emit('field'); }
 
   function isExampleData() { return isExample; }
 
   function clearAll() {
     state = blank();
     isExample = false;
+    carriedKeys = {};
     persist();
     emit('reset');
   }
@@ -166,16 +177,22 @@ var Store = (function () {
   function loadExample() {
     state = example();
     isExample = true;
+    carriedKeys = {};
     persist();
     emit('reset');
   }
 
-  /* 다음 홀 입력 — 같은 결혼식이므로 하객/축의금/부가세 방식은 이어받는다 */
+  /* 다음 홀 입력 — 같은 결혼식이므로 하객/축의금/부가세 방식은 이어받는다.
+     이어받은 필드는 carriedKeys 에 남겨 화면이 "이전 홀에서 가져옴"을 표시하게 한다.
+     (앱이 채운 값과 사용자가 넣은 값은 구분되어야 한다) */
   function startNextHall() {
     var carried = blank();
+    carriedKeys = {};
     for (var i = 0; i < CONFIG.carryOverFields.length; i++) {
       var k = CONFIG.carryOverFields[i];
       carried[k] = state[k];
+      var def = CONFIG.fields[k];
+      if (def && def.type !== 'enum' && state[k] !== '' && state[k] !== undefined) carriedKeys[k] = true;
     }
     /* 보증인원은 홀마다 다르므로 이어받지 않는다 */
     state = carried;
@@ -188,6 +205,7 @@ var Store = (function () {
   function loadFrom(snapshot) {
     state = sanitize(snapshot);
     isExample = false;
+    carriedKeys = {};
     step = 1;
     persist();
     emit('reset');
@@ -260,6 +278,9 @@ var Store = (function () {
     get: get,
     set: set,
     isExampleData: isExampleData,
+    isCarried: isCarried,
+    carriedCount: carriedCount,
+    clearCarried: clearCarried,
     clearAll: clearAll,
     loadExample: loadExample,
     startNextHall: startNextHall,
