@@ -11,3 +11,6 @@ README.md
 # 로컬 미리보기 산출물
 _preview.html
 *.log
+
+# ※ assets/og.png 와 assets/icon-512.png 는 반드시 배포에 포함되어야 합니다.
+#   카카오톡 미리보기가 이 파일을 절대 URL로 직접 가져갑니다.

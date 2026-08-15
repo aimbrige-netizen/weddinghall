@@ -86,6 +86,16 @@ powershell -NoProfile -Command "$l=New-Object System.Net.HttpListener;$l.Prefixe
 
 `index.html` 을 브라우저로 직접 열어도 동작하지만(모듈 없이 클래식 스크립트만 씁니다), `file://` 에서는 브라우저에 따라 `localStorage` 와 클립보드가 막힐 수 있습니다.
 
+## 카카오톡 미리보기 (오픈그래프)
+
+링크를 카톡에 보내면 오렌지 배경에 흰 Sding 로고가 뜹니다. `assets/og.png` (1200×630)이 그 이미지입니다.
+
+- **`og:image`는 절대 URL + PNG여야 합니다.** 상대경로나 SVG를 넣으면 카카오톡에서 이미지가 아예 안 뜹니다.
+- **도메인을 바꾸면** `index.html`의 `og:url`, `og:image`, `twitter:image` 세 줄을 같이 바꿔야 합니다.
+- **카카오톡은 미리보기를 강하게 캐싱합니다.** 이미 한 번 공유한 링크는 바꿔도 옛 미리보기가 그대로 뜨므로, [카카오 개발자 캐시 초기화 도구](https://developers.kakao.com/tool/clear/og)에 주소를 넣어 한 번 비워야 합니다.
+
+이미지는 `assets/logo.svg`의 패스에서 직접 렌더해 만들었습니다. 로고나 색이 바뀌면 같은 방식으로 다시 뽑으면 됩니다 (Node 없이 PowerShell + WPF로 생성).
+
 ## 배포 — GitHub Pages
 
 1. `main` 브랜치에 푸시
@@ -95,7 +105,7 @@ powershell -NoProfile -Command "$l=New-Object System.Net.HttpListener;$l.Prefixe
 ## 구조
 
 ```
-index.html          마크업 · 아이콘 스프라이트 · 방향 계약 주석
+index.html          마크업 · 아이콘 스프라이트 · 오픈그래프 · 방향 계약 주석
 css/styles.css      전체 스타일 (토큰 → 컴포넌트 → 반응형 → 인쇄)
 js/config.js        브랜드 · 예시값 · 필드 정의 · 로고 패스
 js/format.js        숫자 포맷 · 입력 마스킹(커서 보존)
@@ -103,7 +113,7 @@ js/calc.js          계산 엔진 (순수 함수, DOM 무의존)
 js/store.js         상태 · localStorage · 비교함
 js/share.js         텍스트 복사 · Canvas 결과 이미지 · Web Share
 js/app.js           입력 폼 · 결과 · 비교함 렌더링과 이벤트
-assets/             로고 · 파비콘
+assets/             로고 · 파비콘 · 오픈그래프 이미지(og.png) · 홈화면 아이콘(icon-512.png)
 견적서.md            원 기획서
 PRODUCT.md          제품 진실 (변하지 않는 것)
 DESIGN.md           시각 시스템 (토큰 · 타이포 · 모션 규칙)
